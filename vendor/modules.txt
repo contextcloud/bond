@@ -80,6 +80,9 @@ github.com/hashicorp/errwrap
 # github.com/hashicorp/go-multierror v1.1.1
 ## explicit; go 1.13
 github.com/hashicorp/go-multierror
+# github.com/hashicorp/go-version v1.6.0
+## explicit
+github.com/hashicorp/go-version
 # github.com/hashicorp/hcl v1.0.0
 ## explicit
 github.com/hashicorp/hcl
@@ -101,6 +104,13 @@ github.com/hashicorp/hcl/v2/hclsimple
 github.com/hashicorp/hcl/v2/hclsyntax
 github.com/hashicorp/hcl/v2/hclwrite
 github.com/hashicorp/hcl/v2/json
+# github.com/hashicorp/terraform-exec v0.17.3
+## explicit; go 1.18
+github.com/hashicorp/terraform-exec/internal/version
+github.com/hashicorp/terraform-exec/tfexec
+# github.com/hashicorp/terraform-json v0.14.0
+## explicit; go 1.13
+github.com/hashicorp/terraform-json
 # github.com/heptiolabs/healthcheck v0.0.0-20211123025425-613501dd5deb
 ## explicit
 github.com/heptiolabs/healthcheck

@@ -6,6 +6,8 @@ require (
 	github.com/contextcloud/graceful v0.1.0
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/hashicorp/hcl/v2 v2.15.0
+	github.com/hashicorp/terraform-exec v0.17.3
+	github.com/hashicorp/terraform-json v0.14.0
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.12.0
 )
@@ -30,6 +32,7 @@ require (
 	github.com/googleapis/gax-go/v2 v2.4.0 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
+	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/heptiolabs/healthcheck v0.0.0-20211123025425-613501dd5deb // indirect
 	github.com/iamolegga/enviper v1.4.0 // indirect
