@@ -22,8 +22,8 @@ type factory struct {
 	baseDir string
 }
 
-func (m *factory) create(tmp string, filename string, templateName string, data interface{}) error {
-	p := path.Join(tmp, filename)
+func (m *factory) createMain(tmp string, data interface{}) error {
+	p := path.Join(tmp, "main.tf")
 	f, err := m.fs.OpenFile(p, os.O_RDWR|os.O_CREATE, 0755)
 	if err != nil {
 		return err
@@ -31,7 +31,7 @@ func (m *factory) create(tmp string, filename string, templateName string, data 
 	defer f.Close()
 
 	// create the terraform structure
-	tpl, err := template.ParseFS(tmpls, templateName)
+	tpl, err := template.ParseFS(tmpls, "resources/aws.tf.tmpl")
 	if err != nil {
 		return err
 	}
@@ -40,8 +40,32 @@ func (m *factory) create(tmp string, filename string, templateName string, data 
 	}
 	return nil
 }
+func (m *factory) writeModules(tmp string, modules []*Module) error {
+	p := path.Join(tmp, "modules.tf")
+	f, err := m.fs.OpenFile(p, os.O_RDWR|os.O_CREATE, 0755)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	data := Encode(modules)
+	if _, err := f.Write(data); err != nil {
+		return err
+	}
+	return nil
+}
 
 func (m *factory) New(ctx context.Context, cfg *Config) (Terraform, error) {
+	var modules = make([]*Module, len(cfg.Resources))
+	for i, r := range cfg.Resources {
+		// make the file.
+		modules[i] = &Module{
+			Name:    r.Name,
+			Source:  "./" + r.Name,
+			Options: r.Options,
+		}
+	}
+
 	// create a temp dir.
 	tmp, err := os.MkdirTemp(m.baseDir, "bond-")
 	if err != nil {
@@ -49,14 +73,12 @@ func (m *factory) New(ctx context.Context, cfg *Config) (Terraform, error) {
 	}
 
 	data := map[string]interface{}{}
-	if err := m.create(tmp, "main.tf", "resources/aws.tf.tmpl", data); err != nil {
+	if err := m.createMain(tmp, data); err != nil {
 		return nil, err
 	}
 
-	for _, r := range cfg.Resources {
-		if err := m.create(tmp, r.Name+".tf", "resources/resource.tf.tmpl", r); err != nil {
-			return nil, err
-		}
+	if err := m.writeModules(tmp, modules); err != nil {
+
 	}
 
 	return &terraform{}, nil

@@ -13,14 +13,11 @@ func TestFactoryNew(t *testing.T) {
 			foo = ["bar", "demo"]
 		}
 	`
+
 	cfg, err := Parse("main.hcl", []byte(exampleConfig))
 	if err != nil {
 		t.Fatal(err)
 		return
-	}
-
-	for _, r := range cfg.Resources {
-		t.Logf("%+v", r.Options["foo"])
 	}
 
 	t.Run("creates new tf", func(t *testing.T) {
