@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"bond/pkg/parser"
 	"bond/pkg/terra"
 	"io/ioutil"
 	"net/http"
@@ -12,6 +13,7 @@ type Deploy interface {
 }
 
 type deploy struct {
+	p            parser.Parser
 	terraFactory terra.Factory
 }
 
@@ -28,7 +30,7 @@ func (d *deploy) Plan(w http.ResponseWriter, r *http.Request) {
 	if contentType == "application/hcl" {
 		filename = "main.hcl"
 	}
-	cfg, err := terra.Parse(filename, data)
+	cfg, err := d.p.Parse(filename, data)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -61,7 +63,10 @@ func (d *deploy) Apply(w http.ResponseWriter, r *http.Request) {
 }
 
 func NewDeploy(terraFactory terra.Factory) Deploy {
+	p := parser.NewParser()
+
 	return &deploy{
+		p:            p,
 		terraFactory: terraFactory,
 	}
 }

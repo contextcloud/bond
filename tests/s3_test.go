@@ -13,7 +13,6 @@ var content embed.FS
 
 func TestDeploy(t *testing.T) {
 	t.Run("can run plan", func(t *testing.T) {
-		c := controllers.NewDeploy(nil)
 
 		f, err := content.Open("data/s3/s3.def")
 		if err != nil {
@@ -22,6 +21,7 @@ func TestDeploy(t *testing.T) {
 		req := httptest.NewRequest("POST", "/deploy/plan", f)
 		res := httptest.NewRecorder()
 
+		c := controllers.NewDeploy(nil)
 		c.Plan(res, req)
 
 		// Check the status code is what we expect.

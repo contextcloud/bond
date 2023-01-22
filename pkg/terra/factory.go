@@ -3,18 +3,24 @@ package terra
 import (
 	"context"
 	"embed"
+	"fmt"
 	"html/template"
 	"os"
 	"path"
 
+	"github.com/hashicorp/hcl/v2/gohcl"
+	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/spf13/afero"
+	"github.com/zclconf/go-cty/cty"
+
+	"bond/pkg/parser"
 )
 
 //go:embed resources/*
 var tmpls embed.FS
 
 type Factory interface {
-	New(ctx context.Context, cfg *Config) (Terraform, error)
+	New(ctx context.Context, cfg *parser.Config) (Terraform, error)
 }
 
 type factory struct {
@@ -40,7 +46,7 @@ func (m *factory) createMain(tmp string, data interface{}) error {
 	}
 	return nil
 }
-func (m *factory) writeModules(tmp string, modules []*Module) error {
+func (m *factory) writeModules(tmp string, provider string, modules []*parser.Resource) error {
 	p := path.Join(tmp, "modules.tf")
 	f, err := m.fs.OpenFile(p, os.O_RDWR|os.O_CREATE, 0755)
 	if err != nil {
@@ -48,24 +54,38 @@ func (m *factory) writeModules(tmp string, modules []*Module) error {
 	}
 	defer f.Close()
 
-	data := Encode(modules)
-	if _, err := f.Write(data); err != nil {
+	sources := map[string]bool{}
+
+	writer := hclwrite.NewEmptyFile()
+	for _, m := range modules {
+		// source
+		source := fmt.Sprintf("./modules/%s/%s", provider, m.Type)
+		sources[source] = true
+
+		block := gohcl.EncodeAsBlock(m.Options, "module")
+		block.Body().SetAttributeValue("source", cty.StringVal(source))
+		block.SetLabels([]string{m.Name})
+		writer.Body().AppendBlock(block)
+	}
+	if _, err := writer.WriteTo(f); err != nil {
 		return err
 	}
+
+	// copy the modules.
+	for k := range sources {
+		p := path.Join("resources", k)
+		entries, err := tmpls.ReadDir(p)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("%v", entries)
+	}
+
 	return nil
 }
 
-func (m *factory) New(ctx context.Context, cfg *Config) (Terraform, error) {
-	var modules = make([]*Module, len(cfg.Resources))
-	for i, r := range cfg.Resources {
-		// make the file.
-		modules[i] = &Module{
-			Name:    r.Name,
-			Source:  "./" + r.Name,
-			Options: r.Options,
-		}
-	}
-
+func (m *factory) New(ctx context.Context, cfg *parser.Config) (Terraform, error) {
 	// create a temp dir.
 	tmp, err := os.MkdirTemp(m.baseDir, "bond-")
 	if err != nil {
@@ -77,8 +97,8 @@ func (m *factory) New(ctx context.Context, cfg *Config) (Terraform, error) {
 		return nil, err
 	}
 
-	if err := m.writeModules(tmp, modules); err != nil {
-
+	if err := m.writeModules(tmp, "aws", cfg.Resources); err != nil {
+		return nil, err
 	}
 
 	return &terraform{}, nil

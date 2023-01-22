@@ -1,6 +1,7 @@
 package terra
 
 import (
+	"bond/pkg/parser"
 	"context"
 	"testing"
 
@@ -9,12 +10,14 @@ import (
 
 func TestFactoryNew(t *testing.T) {
 	const exampleConfig = `
-		resource "foo" "bar" {
-			foo = ["bar", "demo"]
+		resource "s3_bucket" "bar" {
+			foo = "bar"
 		}
 	`
 
-	cfg, err := Parse("main.hcl", []byte(exampleConfig))
+	p := parser.NewParser()
+
+	cfg, err := p.Parse("main.hcl", []byte(exampleConfig))
 	if err != nil {
 		t.Fatal(err)
 		return
