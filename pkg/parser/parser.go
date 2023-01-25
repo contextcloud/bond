@@ -1,11 +1,13 @@
 package parser
 
 import (
-	"bond/pkg/parser/plugins"
+	"bond/pkg/parser/providers"
+	"bond/pkg/parser/resources"
 	"fmt"
 	"strings"
 
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclparse"
 )
 
@@ -14,7 +16,8 @@ type Parser interface {
 }
 
 type parser struct {
-	plugins plugins.Plugins
+	providers providers.Providers
+	resources resources.Resources
 }
 
 func (p *parser) load(filename string, data []byte) (*hcl.File, error) {
@@ -35,12 +38,39 @@ func (p *parser) load(filename string, data []byte) (*hcl.File, error) {
 	return file, nil
 }
 
-func (p *parser) getDecoder(typeName string) (plugins.Decoder, error) {
-	plugin, ok := p.plugins[typeName]
+func (p *parser) getProvider(name string, body hcl.Body) (*Provider, error) {
+	factory, ok := p.providers[name]
+	if !ok {
+		return nil, fmt.Errorf("unknown provider %q", name)
+	}
+
+	opts := factory()
+	if err := gohcl.DecodeBody(body, nil, opts); err != nil {
+		return nil, err
+	}
+
+	return &Provider{
+		Name:    name,
+		Options: opts,
+	}, nil
+}
+
+func (p *parser) getResource(typeName string, name string, body hcl.Body) (*Resource, error) {
+	factory, ok := p.resources[typeName]
 	if !ok {
 		return nil, fmt.Errorf("unknown resource type %q", typeName)
 	}
-	return plugin, nil
+
+	opts := factory()
+	if err := gohcl.DecodeBody(body, nil, opts); err != nil {
+		return nil, err
+	}
+
+	return &Resource{
+		Type:    typeName,
+		Name:    name,
+		Options: opts,
+	}, nil
 }
 
 func (p *parser) Parse(filename string, data []byte) (*Config, error) {
@@ -50,7 +80,9 @@ func (p *parser) Parse(filename string, data []byte) (*Config, error) {
 		return nil, err
 	}
 
-	cfg := &Config{}
+	cfg := &Config{
+		Env: map[string]string{},
+	}
 
 	var diags hcl.Diagnostics
 	content, _, contentDiags := file.Body.PartialContent(rootSchema)
@@ -58,38 +90,51 @@ func (p *parser) Parse(filename string, data []byte) (*Config, error) {
 
 	for _, block := range content.Blocks {
 		switch block.Type {
-		case "resource":
-			typeName := block.Labels[0]
-			name := block.Labels[1]
+		case "env":
+			attrs, attrsDiags := block.Body.JustAttributes()
+			if attrsDiags.HasErrors() {
+				diags = append(diags, attrsDiags...)
+				continue
+			}
 
-			// Totally-hypothetical plugin manager (not part of HCL)
-			decoder, err := p.getDecoder(typeName)
+			for k, attr := range attrs {
+				v, vDiags := attr.Expr.Value(nil)
+				if vDiags.HasErrors() {
+					diags = append(diags, vDiags...)
+					continue
+				}
+				cfg.Env[k] = v.AsString()
+			}
+
+		case "provider":
+			name := block.Labels[0]
+
+			provider, err := p.getProvider(name, block.Body)
 			if err != nil {
 				diags = diags.Append(&hcl.Diagnostic{
 					Severity: hcl.DiagError,
-					Summary:  "Invalid resource type",
-					Detail:   fmt.Sprintf("The resource type %q is not valid.", typeName),
+					Summary:  "Invalid provider",
+					Detail:   fmt.Sprintf("The provider %q is not valid. %s", name, err.Error()),
 					Subject:  &block.DefRange,
 				})
 				continue
 			}
+			cfg.Providers = append(cfg.Providers, provider)
+		case "resource":
+			typeName := block.Labels[0]
+			name := block.Labels[1]
 
-			opts, err := decoder(block.Body)
+			resource, err := p.getResource(typeName, name, block.Body)
 			if err != nil {
 				diags = diags.Append(&hcl.Diagnostic{
 					Severity: hcl.DiagError,
-					Summary:  "Invalid resource options",
-					Detail:   fmt.Sprintf("The resource options are not valid: %s.", err),
+					Summary:  "Invalid resource type",
+					Detail:   fmt.Sprintf("The resource type %q is not valid. %s", typeName, err.Error()),
 					Subject:  &block.DefRange,
 				})
+				continue
 			}
-
-			r := &Resource{
-				Type:    typeName,
-				Name:    name,
-				Options: opts,
-			}
-			cfg.Resources = append(cfg.Resources, r)
+			cfg.Resources = append(cfg.Resources, resource)
 		}
 	}
 
@@ -101,6 +146,7 @@ func (p *parser) Parse(filename string, data []byte) (*Config, error) {
 
 func NewParser() Parser {
 	return &parser{
-		plugins: plugins.NewPlugins(),
+		providers: providers.NewProviders(),
+		resources: resources.NewResources(),
 	}
 }

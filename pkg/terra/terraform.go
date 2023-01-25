@@ -2,6 +2,7 @@ package terra
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/hc-install/product"
@@ -27,7 +28,23 @@ type terraform struct {
 // The returned error is nil if `terraform plan` has been executed and exits
 // with either 0 or 2.
 func (t *terraform) Plan(ctx context.Context) (bool, error) {
-	return t.tf.Plan(ctx)
+	result, err := t.tf.Plan(ctx, tfexec.Out("plan.tfplan"))
+	if err != nil {
+		return false, err
+	}
+
+	if !result {
+		return false, nil
+	}
+
+	// read it?
+	showPlan, err := t.tf.ShowPlanFileRaw(ctx, "plan.tfplan")
+	if err != nil {
+		return false, err
+	}
+
+	fmt.Println(showPlan)
+	return true, nil
 }
 
 // Show reads the default state path and outputs the state.
@@ -36,10 +53,10 @@ func (t *terraform) Show(ctx context.Context) (*tfjson.State, error) {
 	return t.tf.Show(ctx)
 }
 
-func NewTerraform(ctx context.Context, workingDir string) (Terraform, error) {
+func NewTerraform(ctx context.Context, workingDir string, env map[string]string) (Terraform, error) {
 	installer := &releases.ExactVersion{
 		Product: product.Terraform,
-		Version: version.Must(version.NewVersion("1.0.6")),
+		Version: version.Must(version.NewVersion("1.3.7")),
 	}
 
 	execPath, err := installer.Install(ctx)
@@ -49,6 +66,10 @@ func NewTerraform(ctx context.Context, workingDir string) (Terraform, error) {
 
 	tf, err := tfexec.NewTerraform(workingDir, execPath)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := tf.SetEnv(env); err != nil {
 		return nil, err
 	}
 

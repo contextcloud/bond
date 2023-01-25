@@ -1,7 +1,14 @@
 package parser
 
 type Config struct {
-	Resources []*Resource `hcl:"resource,block"`
+	Env       map[string]string `hcl:"env,block"`
+	Providers []*Provider       `hcl:"provider,block"`
+	Resources []*Resource       `hcl:"resource,block"`
+}
+
+type Provider struct {
+	Name    string      `hcl:"name,label"`
+	Options interface{} `hcl:",squash"`
 }
 
 type Resource struct {
