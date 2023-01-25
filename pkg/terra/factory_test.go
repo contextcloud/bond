@@ -39,9 +39,16 @@ func TestFactoryNew(t *testing.T) {
 			return
 		}
 
-		if _, err := f.New(ctx, cfg); err != nil {
+		tf, err := f.New(ctx, cfg)
+		if err != nil {
 			t.Fatal(err)
 			return
 		}
+
+		if _, err := tf.Plan(ctx); err != nil {
+			t.Fatal(err)
+			return
+		}
+
 	})
 }

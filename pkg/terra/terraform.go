@@ -3,6 +3,9 @@ package terra
 import (
 	"context"
 
+	"github.com/hashicorp/go-version"
+	"github.com/hashicorp/hc-install/product"
+	"github.com/hashicorp/hc-install/releases"
 	"github.com/hashicorp/terraform-exec/tfexec"
 	tfjson "github.com/hashicorp/terraform-json"
 )
@@ -31,4 +34,29 @@ func (t *terraform) Plan(ctx context.Context) (bool, error) {
 // To read a state or plan file, ShowState or ShowPlan must be used instead.
 func (t *terraform) Show(ctx context.Context) (*tfjson.State, error) {
 	return t.tf.Show(ctx)
+}
+
+func NewTerraform(ctx context.Context, workingDir string) (Terraform, error) {
+	installer := &releases.ExactVersion{
+		Product: product.Terraform,
+		Version: version.Must(version.NewVersion("1.0.6")),
+	}
+
+	execPath, err := installer.Install(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	tf, err := tfexec.NewTerraform(workingDir, execPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := tf.Init(ctx, tfexec.Upgrade(true)); err != nil {
+		return nil, err
+	}
+
+	return &terraform{
+		tf: tf,
+	}, nil
 }

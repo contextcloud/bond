@@ -5,8 +5,11 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
+	"io"
+	"io/fs"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclwrite"
@@ -46,6 +49,45 @@ func (m *factory) createMain(tmp string, data interface{}) error {
 	}
 	return nil
 }
+func (m *factory) copyFiles(tmp string, source string) error {
+	prefix := "resources"
+
+	p := path.Join(prefix, source)
+	return fs.WalkDir(tmpls, p, func(n string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		// do nothing
+		if d.IsDir() {
+			return nil
+		}
+
+		tmpl, err := tmpls.Open(n)
+		if err != nil {
+			return err
+		}
+
+		// remove prefix
+		o := strings.TrimPrefix(n, prefix)
+		o = path.Join(tmp, o)
+
+		dir := path.Dir(o)
+		if err := m.fs.MkdirAll(dir, 0755); err != nil {
+			return err
+		}
+
+		f, err := m.fs.OpenFile(o, os.O_RDWR|os.O_CREATE, 0755)
+		if err != nil {
+			return err
+		}
+
+		if _, err := io.Copy(f, tmpl); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
 func (m *factory) writeModules(tmp string, provider string, modules []*parser.Resource) error {
 	p := path.Join(tmp, "modules.tf")
 	f, err := m.fs.OpenFile(p, os.O_RDWR|os.O_CREATE, 0755)
@@ -73,13 +115,9 @@ func (m *factory) writeModules(tmp string, provider string, modules []*parser.Re
 
 	// copy the modules.
 	for k := range sources {
-		p := path.Join("resources", k)
-		entries, err := tmpls.ReadDir(p)
-		if err != nil {
+		if err := m.copyFiles(tmp, k); err != nil {
 			return err
 		}
-
-		fmt.Printf("%v", entries)
 	}
 
 	return nil
@@ -101,7 +139,7 @@ func (m *factory) New(ctx context.Context, cfg *parser.Config) (Terraform, error
 		return nil, err
 	}
 
-	return &terraform{}, nil
+	return NewTerraform(ctx, tmp)
 }
 
 func NewFactory(fs afero.Fs, baseDir string) (Factory, error) {
