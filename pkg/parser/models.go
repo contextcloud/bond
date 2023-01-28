@@ -1,6 +1,7 @@
 package parser
 
-type Config struct {
+type Boundry struct {
+	Id        string            `hcl:"id,attr"`
 	Env       map[string]string `hcl:"env,block"`
 	Providers []*Provider       `hcl:"provider,block"`
 	Resources []*Resource       `hcl:"resource,block"`

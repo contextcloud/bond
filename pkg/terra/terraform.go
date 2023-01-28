@@ -4,15 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/go-version"
-	"github.com/hashicorp/hc-install/product"
-	"github.com/hashicorp/hc-install/releases"
 	"github.com/hashicorp/terraform-exec/tfexec"
 	tfjson "github.com/hashicorp/terraform-json"
 )
 
 type Terraform interface {
 	Plan(ctx context.Context) (bool, error)
+	Apply(ctx context.Context) error
 }
 
 type terraform struct {
@@ -47,23 +45,17 @@ func (t *terraform) Plan(ctx context.Context) (bool, error) {
 	return true, nil
 }
 
+func (t *terraform) Apply(ctx context.Context) error {
+	return t.tf.Apply(ctx)
+}
+
 // Show reads the default state path and outputs the state.
 // To read a state or plan file, ShowState or ShowPlan must be used instead.
 func (t *terraform) Show(ctx context.Context) (*tfjson.State, error) {
 	return t.tf.Show(ctx)
 }
 
-func NewTerraform(ctx context.Context, workingDir string, env map[string]string) (Terraform, error) {
-	installer := &releases.ExactVersion{
-		Product: product.Terraform,
-		Version: version.Must(version.NewVersion("1.3.7")),
-	}
-
-	execPath, err := installer.Install(ctx)
-	if err != nil {
-		return nil, err
-	}
-
+func NewTerraform(ctx context.Context, workingDir string, execPath string, env map[string]string) (Terraform, error) {
 	tf, err := tfexec.NewTerraform(workingDir, execPath)
 	if err != nil {
 		return nil, err

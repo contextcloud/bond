@@ -14,7 +14,7 @@ func TestFactoryNew(t *testing.T) {
 	testdata := []struct {
 		Name string
 	}{{
-		Name: "buckets.hcl",
+		Name: "organization.hcl",
 	}}
 
 	fs := afero.NewOsFs()
@@ -23,9 +23,11 @@ func TestFactoryNew(t *testing.T) {
 		return
 	}
 
+	ctx := context.Background()
+
 	p := parser.NewParser()
 
-	f, err := terra.NewFactory(fs, "tmp")
+	f, err := terra.NewFactory(ctx, fs, "tmp")
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -54,6 +56,11 @@ func TestFactoryNew(t *testing.T) {
 			}
 
 			if _, err := tf.Plan(ctx); err != nil {
+				t.Fatal(err)
+				return
+			}
+
+			if err := tf.Apply(ctx); err != nil {
 				t.Fatal(err)
 				return
 			}

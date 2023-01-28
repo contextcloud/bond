@@ -6,6 +6,9 @@ import (
 	"os"
 	"path"
 
+	"github.com/hashicorp/go-version"
+	"github.com/hashicorp/hc-install/product"
+	"github.com/hashicorp/hc-install/releases"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/spf13/afero"
@@ -16,12 +19,13 @@ import (
 )
 
 type Factory interface {
-	New(ctx context.Context, cfg *parser.Config) (Terraform, error)
+	New(ctx context.Context, cfg *parser.Boundry) (Terraform, error)
 }
 
 type factory struct {
-	fs      afero.Fs
-	baseDir string
+	fs       afero.Fs
+	execPath string
+	baseDir  string
 }
 
 func (m *factory) createProviders(tmp string, providers []*parser.Provider) error {
@@ -85,7 +89,7 @@ func (m *factory) createMain(tmp string, resources []*parser.Resource) error {
 	return nil
 }
 
-func (m *factory) New(ctx context.Context, cfg *parser.Config) (Terraform, error) {
+func (m *factory) New(ctx context.Context, cfg *parser.Boundry) (Terraform, error) {
 	// create a temp dir.
 	tmp, err := os.MkdirTemp(m.baseDir, "bond-")
 	if err != nil {
@@ -100,16 +104,33 @@ func (m *factory) New(ctx context.Context, cfg *parser.Config) (Terraform, error
 		return nil, err
 	}
 
-	return NewTerraform(ctx, tmp, cfg.Env)
+	return NewTerraform(ctx, tmp, m.execPath, cfg.Env)
 }
 
-func NewFactory(fs afero.Fs, baseDir string) (Factory, error) {
-	if err := fs.MkdirAll(baseDir, 0755); err != nil {
+func NewFactory(ctx context.Context, fs afero.Fs, baseDir string) (Factory, error) {
+	dirs := []string{
+		path.Join(baseDir, "boundries"),
+		path.Join(baseDir, "states"),
+	}
+	for _, d := range dirs {
+		if err := fs.MkdirAll(d, 0755); err != nil {
+			return nil, err
+		}
+	}
+
+	installer := &releases.ExactVersion{
+		Product: product.Terraform,
+		Version: version.Must(version.NewVersion("1.3.7")),
+	}
+
+	execPath, err := installer.Install(ctx)
+	if err != nil {
 		return nil, err
 	}
 
 	return &factory{
-		fs:      fs,
-		baseDir: baseDir,
+		fs:       fs,
+		execPath: execPath,
+		baseDir:  baseDir,
 	}, nil
 }

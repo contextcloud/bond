@@ -5,6 +5,7 @@ import (
 	"bond/pkg/terra"
 	"bond/tests/data"
 	"bytes"
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -19,6 +20,14 @@ func TestDeploy(t *testing.T) {
 		Name: "buckets.hcl",
 	}}
 
+	ctx := context.Background()
+	fs := afero.NewOsFs()
+	factory, err := terra.NewFactory(ctx, fs, "./output")
+	if err != nil {
+		t.Fatalf("failed to create factory: %v", err)
+		return
+	}
+
 	for _, d := range testdata {
 		t.Run(d.Name, func(t *testing.T) {
 			raw, err := data.ReadFile(d.Name)
@@ -31,8 +40,6 @@ func TestDeploy(t *testing.T) {
 			req := httptest.NewRequest("POST", "/deploy/plan", reader)
 			res := httptest.NewRecorder()
 
-			fs := afero.NewOsFs()
-			factory, err := terra.NewFactory(fs, "./output")
 			c := controllers.NewDeploy(factory)
 			c.Plan(res, req)
 

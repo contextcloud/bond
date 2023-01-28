@@ -12,7 +12,7 @@ import (
 )
 
 type Parser interface {
-	Parse(filename string, data []byte) (*Config, error)
+	Parse(filename string, data []byte) (*Boundry, error)
 }
 
 type parser struct {
@@ -73,14 +73,14 @@ func (p *parser) getResource(typeName string, name string, body hcl.Body) (*Reso
 	}, nil
 }
 
-func (p *parser) Parse(filename string, data []byte) (*Config, error) {
+func (p *parser) Parse(filename string, data []byte) (*Boundry, error) {
 	// load the file.
 	file, err := p.load(filename, data)
 	if err != nil {
 		return nil, err
 	}
 
-	cfg := &Config{
+	cfg := &Boundry{
 		Env: map[string]string{},
 	}
 
