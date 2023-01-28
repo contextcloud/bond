@@ -14,20 +14,22 @@ func TestFactoryNew(t *testing.T) {
 	testdata := []struct {
 		Name string
 	}{{
-		Name: "organization.hcl",
+		Name: "buckets.hcl",
 	}}
-
-	fs := afero.NewOsFs()
-	if err := fs.RemoveAll("tmp"); err != nil {
-		t.Fatal(err)
-		return
-	}
 
 	ctx := context.Background()
 
-	p := parser.NewParser()
+	backend := &terra.Backend{
+		Type: terra.BackendTypeS3,
+		Options: terra.BackendS3{
+			Bucket: "contextcloud-bond-test-bucket",
+			Region: "us-east-1",
+		},
+	}
 
-	f, err := terra.NewFactory(ctx, fs, "tmp")
+	p := parser.NewParser()
+	fs := afero.NewOsFs()
+	f, err := terra.NewFactory(ctx, fs, "tmp", backend)
 	if err != nil {
 		t.Fatal(err)
 		return

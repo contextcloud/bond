@@ -386,6 +386,14 @@ func Upgrade(upgrade bool) *UpgradeOption {
 	return &UpgradeOption{upgrade}
 }
 
+type MigrateStateOption struct {
+	migrateState bool
+}
+
+func MigrateState(migrateState bool) *MigrateStateOption {
+	return &MigrateStateOption{migrateState}
+}
+
 type VarOption struct {
 	assignment string
 }

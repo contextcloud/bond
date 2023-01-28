@@ -22,7 +22,7 @@ func TestDeploy(t *testing.T) {
 
 	ctx := context.Background()
 	fs := afero.NewOsFs()
-	factory, err := terra.NewFactory(ctx, fs, "./output")
+	factory, err := terra.NewFactory(ctx, fs, "./output", nil)
 	if err != nil {
 		t.Fatalf("failed to create factory: %v", err)
 		return

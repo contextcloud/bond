@@ -54,22 +54,3 @@ func (t *terraform) Apply(ctx context.Context) error {
 func (t *terraform) Show(ctx context.Context) (*tfjson.State, error) {
 	return t.tf.Show(ctx)
 }
-
-func NewTerraform(ctx context.Context, workingDir string, execPath string, env map[string]string) (Terraform, error) {
-	tf, err := tfexec.NewTerraform(workingDir, execPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := tf.SetEnv(env); err != nil {
-		return nil, err
-	}
-
-	if err := tf.Init(ctx, tfexec.Upgrade(true)); err != nil {
-		return nil, err
-	}
-
-	return &terraform{
-		tf: tf,
-	}, nil
-}

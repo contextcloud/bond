@@ -20,6 +20,7 @@ type initConfig struct {
 	reattachInfo  ReattachInfo
 	reconfigure   bool
 	upgrade       bool
+	migrateState  bool
 	verifyPlugins bool
 }
 
@@ -32,6 +33,7 @@ var defaultInitOptions = initConfig{
 	lockTimeout:   "0s",
 	reconfigure:   false,
 	upgrade:       false,
+	migrateState:  false,
 	verifyPlugins: true,
 }
 
@@ -92,6 +94,10 @@ func (opt *UpgradeOption) configureInit(conf *initConfig) {
 	conf.upgrade = opt.upgrade
 }
 
+func (opt *MigrateStateOption) configureInit(conf *initConfig) {
+	conf.migrateState = opt.migrateState
+}
+
 func (opt *VerifyPluginsOption) configureInit(conf *initConfig) {
 	conf.verifyPlugins = opt.verifyPlugins
 }
@@ -139,6 +145,7 @@ func (tf *Terraform) initCmd(ctx context.Context, opts ...InitOption) (*exec.Cmd
 	args = append(args, "-backend="+fmt.Sprint(c.backend))
 	args = append(args, "-get="+fmt.Sprint(c.get))
 	args = append(args, "-upgrade="+fmt.Sprint(c.upgrade))
+	args = append(args, "-migrate-state="+fmt.Sprint(c.migrateState))
 
 	// boolean opts removed in 0.15: pass if <0.15
 	err = tf.compatible(ctx, nil, tf0_15_0)

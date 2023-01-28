@@ -88,6 +88,18 @@ func (p *parser) Parse(filename string, data []byte) (*Boundry, error) {
 	content, _, contentDiags := file.Body.PartialContent(rootSchema)
 	diags = append(diags, contentDiags...)
 
+	for _, attr := range content.Attributes {
+		switch attr.Name {
+		case "id":
+			v, vDiags := attr.Expr.Value(nil)
+			if vDiags.HasErrors() {
+				diags = append(diags, vDiags...)
+				continue
+			}
+			cfg.Id = v.AsString()
+		}
+	}
+
 	for _, block := range content.Blocks {
 		switch block.Type {
 		case "env":
