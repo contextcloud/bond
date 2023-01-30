@@ -27,6 +27,7 @@ type Factory interface {
 type factory struct {
 	fs       afero.Fs
 	execPath string
+	env      map[string]string
 	baseDir  string
 	backend  *Backend
 }
@@ -149,11 +150,13 @@ func (m *factory) New(ctx context.Context, cfg *parser.Boundry) (Terraform, erro
 		return nil, err
 	}
 
+	env := MergeMaps(m.env, cfg.Env)
+
 	tf, err := tfexec.NewTerraform(tmp, m.execPath)
 	if err != nil {
 		return nil, err
 	}
-	if err := tf.SetEnv(cfg.Env); err != nil {
+	if err := tf.SetEnv(env); err != nil {
 		return nil, err
 	}
 
@@ -169,8 +172,10 @@ func (m *factory) New(ctx context.Context, cfg *parser.Boundry) (Terraform, erro
 		return nil, err
 	}
 
-	if err := m.pushState(ctx, tf, cfg.Id); err != nil {
-		return nil, err
+	if m.backend.Type != BackendTypeLocal {
+		if err := m.pushState(ctx, tf, cfg.Id); err != nil {
+			return nil, err
+		}
 	}
 
 	return &terraform{
@@ -178,7 +183,7 @@ func (m *factory) New(ctx context.Context, cfg *parser.Boundry) (Terraform, erro
 	}, nil
 }
 
-func NewFactory(ctx context.Context, fs afero.Fs, baseDir string, backend *Backend) (Factory, error) {
+func NewFactory(ctx context.Context, fs afero.Fs, env map[string]string, baseDir string, backend *Backend) (Factory, error) {
 	statesDir := path.Join(baseDir, "states")
 	if err := fs.MkdirAll(statesDir, 0755); err != nil {
 		return nil, err
@@ -204,6 +209,7 @@ func NewFactory(ctx context.Context, fs afero.Fs, baseDir string, backend *Backe
 	return &factory{
 		fs:       fs,
 		execPath: execPath,
+		env:      env,
 		baseDir:  baseDir,
 		backend:  b,
 	}, nil

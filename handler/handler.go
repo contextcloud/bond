@@ -5,6 +5,7 @@ import (
 	"bond/pkg/terra"
 	"context"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/contextcloud/graceful/config"
@@ -15,18 +16,41 @@ import (
 
 type Config struct {
 	BaseDir string
+
+	S3 *struct {
+		Bucket string `mapstructure:"bucket"`
+		Region string `mapstructure:"region"`
+	} `mapstructure:"s3"`
 }
 
 func NewTerraFactory(ctx context.Context, c *config.Config) (terra.Factory, error) {
 	cfg := &Config{
-		BaseDir: "./bond",
+		BaseDir: ".",
 	}
 	if err := c.Parse(cfg); err != nil {
 		return nil, err
 	}
 
+	env := map[string]string{}
+	envKeys := os.Environ()
+	for _, k := range envKeys {
+		env[k] = os.Getenv(k)
+	}
+
+	backend := &terra.Backend{
+		Type: terra.BackendTypeLocal,
+	}
+
+	if cfg.S3 != nil {
+		backend.Type = terra.BackendTypeS3
+		backend.Options = &terra.BackendS3{
+			Bucket: cfg.S3.Bucket,
+			Region: cfg.S3.Region,
+		}
+	}
+
 	fs := afero.NewOsFs()
-	terraFactory, err := terra.NewFactory(ctx, fs, cfg.BaseDir)
+	terraFactory, err := terra.NewFactory(ctx, fs, env, cfg.BaseDir, backend)
 	if err != nil {
 		return nil, err
 	}

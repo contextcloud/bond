@@ -29,7 +29,8 @@ func TestFactoryNew(t *testing.T) {
 
 	p := parser.NewParser()
 	fs := afero.NewOsFs()
-	f, err := terra.NewFactory(ctx, fs, "tmp", backend)
+	env := map[string]string{}
+	f, err := terra.NewFactory(ctx, fs, env, "tmp", backend)
 	if err != nil {
 		t.Fatal(err)
 		return
