@@ -30,6 +30,7 @@ func init() {
 	rootCmd.AddCommand(serverCmd)
 	rootCmd.AddCommand(planCmd)
 	rootCmd.AddCommand(applyCmd)
+	rootCmd.AddCommand(initCmd)
 }
 
 func initConfig() {

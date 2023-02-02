@@ -5,13 +5,11 @@ import (
 	"bond/pkg/terra"
 	"context"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/contextcloud/graceful/config"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/spf13/afero"
 )
 
 type Config struct {
@@ -31,26 +29,16 @@ func NewTerraFactory(ctx context.Context, c *config.Config) (terra.Factory, erro
 		return nil, err
 	}
 
-	env := map[string]string{}
-	envKeys := os.Environ()
-	for _, k := range envKeys {
-		env[k] = os.Getenv(k)
-	}
-
-	backend := &terra.Backend{
-		Type: terra.BackendTypeLocal,
+	opts := []terra.Option{
+		terra.WithBaseDir(cfg.BaseDir),
+		terra.WithExecPath("./.bin/terraform"),
 	}
 
 	if cfg.S3 != nil {
-		backend.Type = terra.BackendTypeS3
-		backend.Options = &terra.BackendS3{
-			Bucket: cfg.S3.Bucket,
-			Region: cfg.S3.Region,
-		}
+		opts = append(opts, terra.WithBackendS3(cfg.S3.Bucket, cfg.S3.Region))
 	}
 
-	fs := afero.NewOsFs()
-	terraFactory, err := terra.NewFactory(ctx, fs, env, cfg.BaseDir, backend)
+	terraFactory, err := terra.NewFactory(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}

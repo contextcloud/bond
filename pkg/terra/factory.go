@@ -2,14 +2,10 @@ package terra
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"path"
 
-	"github.com/hashicorp/go-version"
-	"github.com/hashicorp/hc-install/product"
-	"github.com/hashicorp/hc-install/releases"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-exec/tfexec"
@@ -25,15 +21,11 @@ type Factory interface {
 }
 
 type factory struct {
-	fs       afero.Fs
-	execPath string
-	env      map[string]string
-	baseDir  string
-	backend  *Backend
+	*Options
 }
 
 func (m *factory) open(p string) (afero.File, error) {
-	f, err := m.fs.OpenFile(p, os.O_RDWR|os.O_CREATE, 0755)
+	f, err := m.Fs.OpenFile(p, os.O_RDWR|os.O_CREATE, 0755)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +108,7 @@ func (m *factory) createMain(tmp string, resources []*parser.Resource) error {
 
 	// copy the modules.
 	for k := range mods {
-		if err := modules.CopyModule(m.fs, tmp, k); err != nil {
+		if err := modules.CopyModule(m.Fs, tmp, k); err != nil {
 			return err
 		}
 	}
@@ -124,35 +116,16 @@ func (m *factory) createMain(tmp string, resources []*parser.Resource) error {
 	return nil
 }
 
-func (m *factory) pushState(ctx context.Context, tf *tfexec.Terraform, id string) error {
-	stateFile := path.Join(m.baseDir, "states", id+".tfstate")
-	if _, err := m.fs.Stat(stateFile); errors.Is(err, os.ErrNotExist) {
-		return nil
-	} else if err != nil {
-		return err
-	}
-
-	// do we need to push existing state?
-	path := path.Join("../states/", id+".tfstate")
-	if err := tf.StatePush(ctx, path); err != nil {
-		return err
-	}
-	if err := m.fs.Remove(stateFile); err != nil {
-		// not sure what to do here!.
-	}
-	return nil
-}
-
 func (m *factory) New(ctx context.Context, cfg *parser.Boundry) (Terraform, error) {
 	// create a temp dir.
-	tmp, err := os.MkdirTemp(m.baseDir, "boundries-")
+	tmp, err := os.MkdirTemp(m.BaseDir, "boundries-")
 	if err != nil {
 		return nil, err
 	}
 
-	env := MergeMaps(m.env, cfg.Env)
+	env := MergeMaps(m.Env, cfg.Env)
 
-	tf, err := tfexec.NewTerraform(tmp, m.execPath)
+	tf, err := tfexec.NewTerraform(tmp, m.ExecPath)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +134,7 @@ func (m *factory) New(ctx context.Context, cfg *parser.Boundry) (Terraform, erro
 	}
 
 	// write the provider again this time with remote backend
-	if err := m.createProviders(tmp, cfg, m.backend.Type, m.backend.Options); err != nil {
+	if err := m.createProviders(tmp, cfg, m.BackendType, m.BackendOptions); err != nil {
 		return nil, err
 	}
 	if err := m.createMain(tmp, cfg.Resources); err != nil {
@@ -172,45 +145,23 @@ func (m *factory) New(ctx context.Context, cfg *parser.Boundry) (Terraform, erro
 		return nil, err
 	}
 
-	if m.backend.Type != BackendTypeLocal {
-		if err := m.pushState(ctx, tf, cfg.Id); err != nil {
-			return nil, err
-		}
-	}
-
 	return &terraform{
 		tf: tf,
 	}, nil
 }
 
-func NewFactory(ctx context.Context, fs afero.Fs, env map[string]string, baseDir string, backend *Backend) (Factory, error) {
-	statesDir := path.Join(baseDir, "states")
-	if err := fs.MkdirAll(statesDir, 0755); err != nil {
+func NewFactory(ctx context.Context, opts ...Option) (Factory, error) {
+	o := NewOptions()
+	for _, opt := range opts {
+		opt(o)
+	}
+
+	statesDir := path.Join(o.BaseDir, "states")
+	if err := o.Fs.MkdirAll(statesDir, 0755); err != nil {
 		return nil, err
-	}
-
-	installer := &releases.ExactVersion{
-		Product: product.Terraform,
-		Version: version.Must(version.NewVersion("1.3.7")),
-	}
-
-	execPath, err := installer.Install(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	b := backend
-	if b == nil {
-		b = &Backend{
-			Type: BackendTypeLocal,
-		}
 	}
 
 	return &factory{
-		fs:       fs,
-		execPath: execPath,
-		env:      env,
-		baseDir:  baseDir,
-		backend:  b,
+		Options: o,
 	}, nil
 }

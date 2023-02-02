@@ -6,8 +6,6 @@ import (
 	"bond/tests/data"
 	"context"
 	"testing"
-
-	"github.com/spf13/afero"
 )
 
 func TestFactoryNew(t *testing.T) {
@@ -18,19 +16,11 @@ func TestFactoryNew(t *testing.T) {
 	}}
 
 	ctx := context.Background()
-
-	backend := &terra.Backend{
-		Type: terra.BackendTypeS3,
-		Options: terra.BackendS3{
-			Bucket: "contextcloud-bond-test-bucket",
-			Region: "us-east-1",
-		},
-	}
+	withBackendS3 := terra.WithBackendS3("contextcloud-bond-test-bucket", "us-east-1")
+	withBaseDir := terra.WithBaseDir("./tmp")
 
 	p := parser.NewParser()
-	fs := afero.NewOsFs()
-	env := map[string]string{}
-	f, err := terra.NewFactory(ctx, fs, env, "tmp", backend)
+	f, err := terra.NewFactory(ctx, withBackendS3, withBaseDir)
 	if err != nil {
 		t.Fatal(err)
 		return

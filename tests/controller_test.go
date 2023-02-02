@@ -9,8 +9,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"github.com/spf13/afero"
 )
 
 func TestDeploy(t *testing.T) {
@@ -21,9 +19,10 @@ func TestDeploy(t *testing.T) {
 	}}
 
 	ctx := context.Background()
-	fs := afero.NewOsFs()
-	env := map[string]string{}
-	factory, err := terra.NewFactory(ctx, fs, env, "./output", nil)
+	withBackendS3 := terra.WithBackendS3("contextcloud-bond-test-bucket", "us-east-1")
+	withBaseDir := terra.WithBaseDir("./tmp")
+
+	factory, err := terra.NewFactory(ctx, withBackendS3, withBaseDir)
 	if err != nil {
 		t.Fatalf("failed to create factory: %v", err)
 		return
