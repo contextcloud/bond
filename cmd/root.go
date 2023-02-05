@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -11,6 +10,7 @@ import (
 var (
 	// Used for flags.
 	cfgFile     string
+	baseDir     string
 	userLicense string
 
 	rootCmd = &cobra.Command{
@@ -30,6 +30,7 @@ func init() {
 	rootCmd.AddCommand(serverCmd)
 	rootCmd.AddCommand(planCmd)
 	rootCmd.AddCommand(applyCmd)
+	rootCmd.AddCommand(destroyCmd)
 	rootCmd.AddCommand(initCmd)
 }
 
@@ -38,12 +39,8 @@ func initConfig() {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
 	} else {
-		// Find home directory.
-		home, err := os.UserHomeDir()
-		cobra.CheckErr(err)
-
 		// Search config in home directory with name ".bond" (without extension).
-		viper.AddConfigPath(home)
+		viper.AddConfigPath(".")
 		viper.SetConfigType("yaml")
 		viper.SetConfigName(".bond")
 	}

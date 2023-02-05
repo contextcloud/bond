@@ -2,8 +2,8 @@ package tests
 
 import (
 	"bond/controllers"
+	"bond/examples"
 	"bond/pkg/terra"
-	"bond/tests/data"
 	"bytes"
 	"context"
 	"net/http"
@@ -30,7 +30,7 @@ func TestDeploy(t *testing.T) {
 
 	for _, d := range testdata {
 		t.Run(d.Name, func(t *testing.T) {
-			raw, err := data.ReadFile(d.Name)
+			raw, err := examples.ReadFile(d.Name)
 			if err != nil {
 				t.Fatalf("failed to open: %v", err)
 				return

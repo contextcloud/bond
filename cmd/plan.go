@@ -1,13 +1,13 @@
 package cmd
 
 import (
-	"bond/handler"
-	"bond/pkg/parser"
 	"context"
 	"fmt"
 	"os"
 
-	"github.com/contextcloud/graceful/config"
+	"bond/config"
+	"bond/pkg/parser"
+
 	"github.com/spf13/cobra"
 )
 
@@ -20,12 +20,12 @@ var planCmd = &cobra.Command{
 		ctx, cancel := context.WithCancel(cmd.Context())
 		defer cancel()
 
-		cfg, err := config.NewConfig(ctx)
+		cfg, err := config.NewConfig()
 		if err != nil {
 			return err
 		}
 
-		terraFactory, err := handler.NewTerraFactory(ctx, cfg)
+		terraFactory, err := config.NewTerraFactory(ctx, cfg)
 		if err != nil {
 			return err
 		}

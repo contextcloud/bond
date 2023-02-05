@@ -12,3 +12,10 @@ resource "aws_organizations_organization" "this" {
 
   feature_set = "ALL"
 }
+
+# This OU is for locking down accounts we believe are compromised or which
+# should not contain any actual resources (like GovCloud placeholders).
+resource "aws_organizations_organizational_unit" "suspended" {
+  name      = "suspended"
+  parent_id = aws_organizations_organization.this.roots.0.id
+}

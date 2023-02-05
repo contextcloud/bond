@@ -47,6 +47,11 @@ func WithBaseDir(dir string) Option {
 
 func WithExecPath(path string) Option {
 	return func(o *Options) {
+		if path == "terraform" {
+			o.ExecPath = path
+			return
+		}
+
 		execPath, _ := filepath.Abs(path)
 		o.ExecPath = execPath
 	}

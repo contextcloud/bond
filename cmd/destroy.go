@@ -1,19 +1,20 @@
 package cmd
 
 import (
-	"bond/config"
-	"bond/pkg/parser"
 	"context"
 	"fmt"
 	"os"
 
+	"bond/config"
+	"bond/pkg/parser"
+
 	"github.com/spf13/cobra"
 )
 
-var applyCmd = &cobra.Command{
-	Use:   "apply",
-	Short: "Apply the configuration",
-	Long:  `apply applies the configuration.`,
+var destroyCmd = &cobra.Command{
+	Use:   "destroy",
+	Short: "Destroy resources",
+	Long:  `destroy destroys resources.`,
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx, cancel := context.WithCancel(cmd.Context())
@@ -46,11 +47,11 @@ var applyCmd = &cobra.Command{
 				return err
 			}
 
-			if err := tf.Apply(ctx); err != nil {
+			if err := tf.Destroy(ctx); err != nil {
 				return err
 			}
 
-			fmt.Printf("Applied")
+			fmt.Printf("Destroyed")
 		}
 
 		cancel()

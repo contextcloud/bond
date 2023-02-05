@@ -156,11 +156,6 @@ func NewFactory(ctx context.Context, opts ...Option) (Factory, error) {
 		opt(o)
 	}
 
-	statesDir := path.Join(o.BaseDir, "states")
-	if err := o.Fs.MkdirAll(statesDir, 0755); err != nil {
-		return nil, err
-	}
-
 	return &factory{
 		Options: o,
 	}, nil

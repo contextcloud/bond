@@ -11,6 +11,7 @@ import (
 type Terraform interface {
 	Plan(ctx context.Context) (bool, error)
 	Apply(ctx context.Context) error
+	Destroy(ctx context.Context) error
 }
 
 type terraform struct {
@@ -47,6 +48,10 @@ func (t *terraform) Plan(ctx context.Context) (bool, error) {
 
 func (t *terraform) Apply(ctx context.Context) error {
 	return t.tf.Apply(ctx)
+}
+
+func (t *terraform) Destroy(ctx context.Context) error {
+	return t.tf.Destroy(ctx)
 }
 
 // Show reads the default state path and outputs the state.

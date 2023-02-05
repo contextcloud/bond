@@ -1,9 +1,9 @@
 package tests
 
 import (
+	"bond/examples"
 	"bond/pkg/parser"
 	"bond/pkg/terra"
-	"bond/tests/data"
 	"context"
 	"testing"
 )
@@ -28,7 +28,7 @@ func TestFactoryNew(t *testing.T) {
 
 	for _, d := range testdata {
 		t.Run(d.Name, func(t *testing.T) {
-			raw, err := data.ReadFile(d.Name)
+			raw, err := examples.ReadFile(d.Name)
 			if err != nil {
 				t.Fatal(err)
 				return

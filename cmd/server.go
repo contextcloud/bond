@@ -1,11 +1,12 @@
 package cmd
 
 import (
+	"bond/config"
 	"bond/handler"
 	"context"
 
 	"github.com/contextcloud/graceful"
-	"github.com/contextcloud/graceful/config"
+	gconfig "github.com/contextcloud/graceful/config"
 	"github.com/contextcloud/graceful/srv"
 	"github.com/spf13/cobra"
 )
@@ -18,30 +19,40 @@ var serverCmd = &cobra.Command{
 		ctx, cancel := context.WithCancel(cmd.Context())
 		defer cancel()
 
-		cfg, err := config.NewConfig(ctx)
+		cfg, err := config.NewConfig()
 		if err != nil {
 			return err
 		}
 
-		handler, err := handler.NewHandler(ctx, cfg)
+		terraFactory, err := config.NewTerraFactory(ctx, cfg)
 		if err != nil {
 			return err
 		}
 
-		startable, err := srv.NewStartable(cfg.SrvAddr, handler)
+		handler, err := handler.NewHandler(ctx, terraFactory)
 		if err != nil {
 			return err
 		}
 
-		tracer, err := srv.NewTracer(ctx, cfg)
+		gcfg, err := gconfig.NewConfig(ctx)
+		if err != nil {
+			return err
+		}
+
+		startable, err := srv.NewStartable(gcfg.SrvAddr, handler)
+		if err != nil {
+			return err
+		}
+
+		tracer, err := srv.NewTracer(ctx, gcfg)
 		if err != nil {
 			return err
 		}
 
 		multi := srv.NewMulti(
 			tracer,
-			srv.NewMetricsServer(cfg.MetricsAddr),
-			srv.NewHealth(cfg.HealthAddr),
+			srv.NewMetricsServer(gcfg.MetricsAddr),
+			srv.NewHealth(gcfg.HealthAddr),
 			startable,
 		)
 
