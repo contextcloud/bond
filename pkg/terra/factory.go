@@ -24,6 +24,42 @@ type factory struct {
 	*Options
 }
 
+func (m *factory) ensure(dir string) (string, error) {
+	// check if the dir exists.
+	p := path.Join(m.BaseDir, dir)
+
+	fi, err := m.Fs.Stat(p)
+	if err != nil && !os.IsNotExist(err) {
+		return "", err
+	}
+	if err == nil && fi.IsDir() {
+		// clean up the dir
+		modules := path.Join(p, "modules")
+		if err := m.Fs.RemoveAll(modules); err != nil {
+			return "", err
+		}
+		if err := m.Fs.RemoveAll(path.Join(p, "main.tf")); err != nil {
+			return "", err
+		}
+		if err := m.Fs.RemoveAll(path.Join(p, "providers.tf")); err != nil {
+			return "", err
+		}
+		return p, nil
+	}
+	if err == nil && !fi.IsDir() {
+		if err := m.Fs.Remove(p); err != nil {
+			return "", err
+		}
+	}
+
+	// create a temp dir.
+	if err := os.MkdirAll(p, 0755); err != nil {
+		return "", err
+	}
+
+	return p, nil
+}
+
 func (m *factory) open(p string) (afero.File, error) {
 	f, err := m.Fs.OpenFile(p, os.O_RDWR|os.O_CREATE, 0755)
 	if err != nil {
@@ -117,15 +153,14 @@ func (m *factory) createMain(tmp string, resources []*parser.Resource) error {
 }
 
 func (m *factory) New(ctx context.Context, cfg *parser.Boundry) (Terraform, error) {
-	// create a temp dir.
-	tmp, err := os.MkdirTemp(m.BaseDir, "boundries-")
+	workingDir, err := m.ensure(cfg.Id)
 	if err != nil {
 		return nil, err
 	}
 
 	env := MergeMaps(m.Env, cfg.Env)
 
-	tf, err := tfexec.NewTerraform(tmp, m.ExecPath)
+	tf, err := tfexec.NewTerraform(workingDir, m.ExecPath)
 	if err != nil {
 		return nil, err
 	}
@@ -134,10 +169,10 @@ func (m *factory) New(ctx context.Context, cfg *parser.Boundry) (Terraform, erro
 	}
 
 	// write the provider again this time with remote backend
-	if err := m.createProviders(tmp, cfg, m.BackendType, m.BackendOptions); err != nil {
+	if err := m.createProviders(workingDir, cfg, m.BackendType, m.BackendOptions); err != nil {
 		return nil, err
 	}
-	if err := m.createMain(tmp, cfg.Resources); err != nil {
+	if err := m.createMain(workingDir, cfg.Resources); err != nil {
 		return nil, err
 	}
 

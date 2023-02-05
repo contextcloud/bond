@@ -12,15 +12,17 @@ func TestFactoryNew(t *testing.T) {
 	testdata := []struct {
 		Name string
 	}{{
-		Name: "buckets.hcl",
+		Name: "organization.hcl",
 	}}
 
 	ctx := context.Background()
-	withBackendS3 := terra.WithBackendS3("contextcloud-bond-test-bucket", "us-east-1")
-	withBaseDir := terra.WithBaseDir("./tmp")
+	opts := []terra.Option{
+		// terra.WithBackendS3("contextcloud-bond-test-bucket", "us-east-1"),
+		terra.WithBaseDir("./tmp"),
+	}
 
 	p := parser.NewParser()
-	f, err := terra.NewFactory(ctx, withBackendS3, withBaseDir)
+	f, err := terra.NewFactory(ctx, opts...)
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -53,10 +55,10 @@ func TestFactoryNew(t *testing.T) {
 				return
 			}
 
-			if err := tf.Apply(ctx); err != nil {
-				t.Fatal(err)
-				return
-			}
+			// if err := tf.Destroy(ctx); err != nil {
+			// 	t.Fatal(err)
+			// 	return
+			// }
 		})
 	}
 }

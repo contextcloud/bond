@@ -19,10 +19,12 @@ func TestDeploy(t *testing.T) {
 	}}
 
 	ctx := context.Background()
-	withBackendS3 := terra.WithBackendS3("contextcloud-bond-test-bucket", "us-east-1")
-	withBaseDir := terra.WithBaseDir("./tmp")
+	opts := []terra.Option{
+		// terra.WithBackendS3("contextcloud-bond-test-bucket", "us-east-1"),
+		terra.WithBaseDir("./tmp"),
+	}
 
-	factory, err := terra.NewFactory(ctx, withBackendS3, withBaseDir)
+	factory, err := terra.NewFactory(ctx, opts...)
 	if err != nil {
 		t.Fatalf("failed to create factory: %v", err)
 		return

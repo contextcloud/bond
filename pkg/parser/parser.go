@@ -84,6 +84,8 @@ func (p *parser) Parse(filename string, data []byte) (*Boundry, error) {
 		Env: map[string]string{},
 	}
 
+	// create the eval context
+
 	var diags hcl.Diagnostics
 	content, _, contentDiags := file.Body.PartialContent(rootSchema)
 	diags = append(diags, contentDiags...)

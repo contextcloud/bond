@@ -1,4 +1,4 @@
-id = "cc-bond-test-buckets"
+id = "bond-buckets"
 
 provider "aws" {
   region = "us-east-1"
