@@ -7,12 +7,18 @@ provider "aws" {
 resource "aws_organization" "bond" {
 }
 
-resource "aws_organizational_unit" "cloud" {
+resource "aws_organizational_unit" "cloud_unit" {
   organization_name = "cloud"
-}
-
-resource "aws_organization_account" "cloud_control" {
-  name                = "cloud-control"
-  email               = "aws+cloud-control@getnoops.com"
-  organizational_unit = aws_organizational_unit.cloud.id
+  accounts          = {
+    "cloud-control"  = {
+      "email" = "aws+cloud-control@getnoops.com"
+    },
+    "cloud-nonprod"  = {
+      "email" = "aws+cloud-nonprod@getnoops.com"
+    },
+    "cloud-prod"  = {
+      "email" = "aws+cloud-prod@getnoops.com"
+    },
+  }
+  depends_on        = ["module.bond"]
 }

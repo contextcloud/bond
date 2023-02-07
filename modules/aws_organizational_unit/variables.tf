@@ -1,5 +1,12 @@
-variable organization_name {
+variable "organization_name" {
   type        = string
-  default     = ""
   description = "Organization Name"
+}
+
+variable "accounts" {
+  type = map(object({
+    email = string
+    tags  = optional(map(string))
+  }))
+  description = "Accounts to be created"
 }
