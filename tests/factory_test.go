@@ -12,7 +12,7 @@ func TestFactoryNew(t *testing.T) {
 	testdata := []struct {
 		Name string
 	}{{
-		Name: "organization.hcl",
+		Name: "auth.hcl",
 	}}
 
 	ctx := context.Background()
