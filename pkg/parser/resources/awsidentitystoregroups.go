@@ -1,7 +1,7 @@
 package resources
 
 type AwsIdentitystoreGroups struct {
-	Groups []AwsIdentitystoreUser `hcl:"groups"`
+	Groups []AwsIdentitystoreGroup `hcl:"groups"`
 }
 
 type AwsIdentitystoreGroup struct {

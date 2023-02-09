@@ -5,18 +5,16 @@ provider "aws" {
 }
 
 resource "aws_identitystore_permission_sets" "permission_sets" {
-  permission_sets = [
-    {
-      name                                = "AdministratorAccess",
-      description                         = "Allow Full Access to the account",
-      relay_state                         = "",
-      session_duration                    = "",
-      tags                                = {},
-      inline_policy                       = "",
-      policy_attachments                  = ["arn:aws:iam::aws:policy/AdministratorAccess"]
-      customer_managed_policy_attachments = []
-    }
-  ]
+  permission_sets = [{
+    name                                = "AdministratorAccess",
+    description                         = "Allow Full Access to the account",
+    relay_state                         = "",
+    session_duration                    = "",
+    tags                                = {},
+    inline_policy                       = "",
+    policy_attachments                  = ["arn:aws:iam::aws:policy/AdministratorAccess"]
+    customer_managed_policy_attachments = []
+  }]
 }
 
 resource "aws_identitystore_groups" "groups" {
@@ -34,4 +32,12 @@ resource "aws_identitystore_users" "users" {
     "family_name"  = "Kolenko"
     "email"        = "chris@getnoops.com"
   }]
+}
+
+resource "aws_identitystore_group_memberships" "group_memberships" {
+  members = [{
+    user_name  = "chris"
+    group_name = "BondAdmins"
+  }]
+  depends_on = ["module.users", "module.groups"]
 }
