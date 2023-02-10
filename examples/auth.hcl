@@ -41,3 +41,11 @@ resource "aws_identitystore_group_memberships" "group_memberships" {
   }]
   depends_on = ["module.users", "module.groups"]
 }
+
+resource "aws_identitystore_assignments" "standard-control-assignments" {
+   assignments = [{
+     account_name        = "standard-control"
+     group_name          = "org-standard#admins"
+     permission_set_name = "AdministratorAccess"
+   }]
+}
