@@ -8,6 +8,7 @@ type Resources map[string]Factory
 
 func NewResources() Resources {
 	return map[string]Factory{
+		"aws_cloudfront_distribution":         func() Resource { return &AwsCloudfrontDistribution{} },
 		"aws_identitystore_assignments":       func() Resource { return &AwsIdentitystoreAssignments{} },
 		"aws_identitystore_group_memberships": func() Resource { return &AwsIdentitystoreGroupMemberships{} },
 		"aws_identitystore_groups":            func() Resource { return &AwsIdentitystoreGroups{} },

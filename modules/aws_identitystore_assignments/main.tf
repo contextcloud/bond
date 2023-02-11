@@ -36,8 +36,8 @@ locals {
   sso_instance_arn   = tolist(data.aws_ssoadmin_instances.this.arns)[0]
   account_map        = { for a in data.aws_organizations_organization.this.accounts : a.name => a }
   assignment_map     = { for a in var.assignments : format("%v_%v_%v", a.account_name, a.group_name, a.permission_set_name) => a }
-  group_map          = { for g in var.assignments : g.group_name => g.group_name }
-  permission_set_map = { for p in var.assignments : p.permission_set_name => p.permission_set_name }
+  group_map          = { for g in var.assignments : g.group_name => g.group_name... }
+  permission_set_map = { for p in var.assignments : p.permission_set_name => p.permission_set_name... }
 }
 
 # resource "aws_identitystore_assignments" "standard-control-assignments" {

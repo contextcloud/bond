@@ -33,6 +33,6 @@ locals {
   sso_instance_arn  = tolist(data.aws_ssoadmin_instances.this.arns)[0]
 
   members_map = { for m in var.members : format("%v_%v", m.group_name, m.user_name) => m }
-  group_map   = { for g in var.members : g.group_name => g.group_name }
-  user_map    = { for u in var.members : u.user_name => u.user_name }
+  group_map   = { for g in var.members : g.group_name => g.group_name... }
+  user_map    = { for u in var.members : u.user_name => u.user_name... }
 }
