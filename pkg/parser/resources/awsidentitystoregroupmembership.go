@@ -1,8 +1,7 @@
 package resources
 
 type AwsIdentitystoreGroupMemberships struct {
-	Members   []AwsIdentitystoreGroupMembership `hcl:"members"`
-	DependsOn []string                          `hcl:"depends_on,optional"`
+	Members []AwsIdentitystoreGroupMembership `hcl:"members"`
 }
 
 type AwsIdentitystoreGroupMembership struct {

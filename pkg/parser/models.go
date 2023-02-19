@@ -1,19 +1,20 @@
 package parser
 
 type Boundry struct {
-	Id        string            `hcl:"id,attr"`
-	Env       map[string]string `hcl:"env,block"`
-	Providers []*Provider       `hcl:"provider,block"`
-	Resources []*Resource       `hcl:"resource,block"`
+	Id        string
+	Env       map[string]string
+	Providers []*Provider
+	Resources []*Resource
 }
 
 type Provider struct {
-	Name    string      `hcl:"name,label"`
-	Options interface{} `hcl:",squash"`
+	Name    string
+	Options interface{}
 }
 
 type Resource struct {
-	Type    string      `hcl:"type,label"`
-	Name    string      `hcl:"name,label"`
-	Options interface{} `hcl:",squash"`
+	Type      string
+	Name      string
+	Options   interface{}
+	DependsOn []string
 }

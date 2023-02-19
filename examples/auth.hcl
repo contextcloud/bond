@@ -39,7 +39,7 @@ resource "aws_identitystore_group_memberships" "group_memberships" {
     user_name  = "chris"
     group_name = "BondAdmins"
   }]
-  depends_on = ["module.users", "module.groups"]
+  depends_on = ["users", "groups"]
 }
 
 resource "aws_identitystore_assignments" "standard-control-assignments" {

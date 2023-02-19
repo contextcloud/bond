@@ -11,6 +11,7 @@ import (
 type Terraform interface {
 	Plan(ctx context.Context) (bool, error)
 	Apply(ctx context.Context) error
+	Output(ctx context.Context) (map[string]tfexec.OutputMeta, error)
 	Destroy(ctx context.Context) error
 }
 
@@ -48,6 +49,10 @@ func (t *terraform) Plan(ctx context.Context) (bool, error) {
 
 func (t *terraform) Apply(ctx context.Context) error {
 	return t.tf.Apply(ctx)
+}
+
+func (t *terraform) Output(ctx context.Context) (map[string]tfexec.OutputMeta, error) {
+	return t.tf.Output(ctx)
 }
 
 func (t *terraform) Destroy(ctx context.Context) error {

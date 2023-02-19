@@ -4,6 +4,7 @@ import (
 	"bond/config"
 	"bond/pkg/parser"
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -50,7 +51,17 @@ var applyCmd = &cobra.Command{
 				return err
 			}
 
-			fmt.Printf("Applied")
+			output, err := tf.Output(ctx)
+			if err != nil {
+				return err
+			}
+
+			raw, err := json.Marshal(output)
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("%s", string(raw))
 		}
 
 		cancel()

@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclparse"
 )
 
@@ -44,8 +43,8 @@ func (p *parser) getProvider(name string, body hcl.Body) (*Provider, error) {
 		return nil, fmt.Errorf("unknown provider %q", name)
 	}
 
-	opts := factory()
-	if err := gohcl.DecodeBody(body, nil, opts); err != nil {
+	opts, err := factory(body)
+	if err != nil {
 		return nil, err
 	}
 
@@ -61,15 +60,21 @@ func (p *parser) getResource(typeName string, name string, body hcl.Body) (*Reso
 		return nil, fmt.Errorf("unknown resource type %q", typeName)
 	}
 
-	opts := factory()
-	if err := gohcl.DecodeBody(body, nil, opts); err != nil {
+	dependsOn, remains, err := DependsOn(body)
+	if err != nil {
+		return nil, err
+	}
+
+	opts, err := factory(remains)
+	if err != nil {
 		return nil, err
 	}
 
 	return &Resource{
-		Type:    typeName,
-		Name:    name,
-		Options: opts,
+		Type:      typeName,
+		Name:      name,
+		Options:   opts,
+		DependsOn: dependsOn,
 	}, nil
 }
 

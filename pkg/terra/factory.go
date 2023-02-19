@@ -7,6 +7,7 @@ import (
 	"path"
 
 	"github.com/hashicorp/hcl/v2/gohcl"
+	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-exec/tfexec"
 	"github.com/spf13/afero"
@@ -15,6 +16,13 @@ import (
 	"bond/modules"
 	"bond/pkg/parser"
 )
+
+var paths = []string{
+	"modules",
+	"main.tf",
+	"providers.tf",
+	"outputs.tf",
+}
 
 type Factory interface {
 	New(ctx context.Context, cfg *parser.Boundry) (Terraform, error)
@@ -33,16 +41,10 @@ func (m *factory) ensure(dir string) (string, error) {
 		return "", err
 	}
 	if err == nil && fi.IsDir() {
-		// clean up the dir
-		modules := path.Join(p, "modules")
-		if err := m.Fs.RemoveAll(modules); err != nil {
-			return "", err
-		}
-		if err := m.Fs.RemoveAll(path.Join(p, "main.tf")); err != nil {
-			return "", err
-		}
-		if err := m.Fs.RemoveAll(path.Join(p, "providers.tf")); err != nil {
-			return "", err
+		for _, name := range paths {
+			if err := m.Fs.RemoveAll(path.Join(p, name)); err != nil {
+				return "", err
+			}
 		}
 		return p, nil
 	}
@@ -136,6 +138,39 @@ func (m *factory) createMain(tmp string, resources []*parser.Resource) error {
 		block := gohcl.EncodeAsBlock(m.Options, "module")
 		block.Body().SetAttributeValue("source", cty.StringVal(source))
 		block.SetLabels([]string{m.Name})
+
+		if len(m.DependsOn) > 0 {
+			toks := hclwrite.Tokens{}
+			toks = append(toks, &hclwrite.Token{
+				Type:  hclsyntax.TokenOBrack,
+				Bytes: []byte("["),
+			})
+			for i, d := range m.DependsOn {
+				if i > 0 {
+					toks = append(toks, &hclwrite.Token{
+						Type:  hclsyntax.TokenComma,
+						Bytes: []byte{','},
+					})
+				}
+				toks = append(toks, &hclwrite.Token{
+					Type:  hclsyntax.TokenIdent,
+					Bytes: []byte(fmt.Sprintf("module.%s", d)),
+				})
+			}
+			toks = append(toks, &hclwrite.Token{
+				Type:  hclsyntax.TokenCBrack,
+				Bytes: []byte("]"),
+			})
+
+			// toks := hclwrite.Tokens{
+			// 	&hclwrite.Token{
+			// 		Type:  hclsyntax.TokenIdent,
+			// 		Bytes: []byte(fmt.Sprintf("module.%s", m.Name)),
+			// 	},
+			// }
+			block.Body().SetAttributeRaw("depends_on", toks)
+		}
+
 		writer.Body().AppendBlock(block)
 	}
 	if _, err := writer.WriteTo(f); err != nil {
@@ -147,6 +182,33 @@ func (m *factory) createMain(tmp string, resources []*parser.Resource) error {
 		if err := modules.CopyModule(m.Fs, tmp, k); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+func (m *factory) createOutputs(tmp string, resources []*parser.Resource) error {
+	p := path.Join(tmp, "outputs.tf")
+	f, err := m.open(p)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	writer := hclwrite.NewEmptyFile()
+	for _, m := range resources {
+		toks := hclwrite.Tokens{
+			&hclwrite.Token{
+				Type:  hclsyntax.TokenIdent,
+				Bytes: []byte(fmt.Sprintf("module.%s", m.Name)),
+			},
+		}
+
+		block := hclwrite.NewBlock("output", []string{m.Name})
+		block.Body().SetAttributeRaw("value", toks)
+		writer.Body().AppendBlock(block)
+	}
+	if _, err := writer.WriteTo(f); err != nil {
+		return err
 	}
 
 	return nil
@@ -164,6 +226,11 @@ func (m *factory) New(ctx context.Context, cfg *parser.Boundry) (Terraform, erro
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO toggle this on and off
+	tf.SetStdout(os.Stdout)
+	tf.SetStderr(os.Stderr)
+
 	if err := tf.SetEnv(env); err != nil {
 		return nil, err
 	}
@@ -173,6 +240,9 @@ func (m *factory) New(ctx context.Context, cfg *parser.Boundry) (Terraform, erro
 		return nil, err
 	}
 	if err := m.createMain(workingDir, cfg.Resources); err != nil {
+		return nil, err
+	}
+	if err := m.createOutputs(workingDir, cfg.Resources); err != nil {
 		return nil, err
 	}
 

@@ -2,7 +2,6 @@ package resources
 
 type AwsIdentitystoreAssignments struct {
 	Assignments []AwsIdentitystoreAssignment `hcl:"assignments"`
-	DependsOn   []string                     `hcl:"depends_on,optional"`
 }
 
 type AwsIdentitystoreAssignment struct {
