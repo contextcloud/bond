@@ -1,68 +1,84 @@
-module "cdn" {
-  source = "terraform-aws-modules/cloudfront/aws"
-
-  aliases = ["cdn.example.com"]
-
-  comment             = "My awesome CloudFront"
+resource "aws_cloudfront_distribution" "this" {
   enabled             = true
+  http_version        = "http2"
   is_ipv6_enabled     = true
-  price_class         = "PriceClass_All"
-  retain_on_delete    = false
-  wait_for_deployment = false
+  aliases             = var.aliases
+  comment             = var.comment
+  default_root_object = var.default_root_object
+  price_class         = var.price_class
+  web_acl_id          = var.web_acl_id
+  tags                = var.tags
+  retain_on_delete    = var.retain_on_delete
+  wait_for_deployment = var.wait_for_deployment
 
-  create_origin_access_identity = true
-  origin_access_identities = {
-    s3_bucket_one = "My awesome CloudFront can access"
-  }
+  dynamic "origin" {
+    for_each = var.origin
 
-  logging_config = {
-    bucket = "logs-my-cdn.s3.amazonaws.com"
-  }
+    content {
+      domain_name              = origin.value.domain_name
+      origin_id                = origin.value.origin_id
+      origin_path              = origin.value.origin_path
+      connection_attempts      = origin.value.connection_attempts
+      connection_timeout       = origin.value.connection_timeout
+      /* origin_access_control_id = lookup(origin.value, "origin_access_control_id", lookup(lookup(aws_cloudfront_origin_access_control.this, lookup(origin.value, "origin_access_control", ""), {}), "id", null)) */
 
-  origin = {
-    something = {
-      domain_name = "something.example.com"
-      custom_origin_config = {
-        http_port              = 80
-        https_port             = 443
-        origin_protocol_policy = "match-viewer"
-        origin_ssl_protocols   = ["TLSv1", "TLSv1.1", "TLSv1.2"]
+      dynamic "s3_origin_config" {
+        for_each = origin.value.s3_origin_config == null ? [] : [origin.value.s3_origin_config]
+
+        content {
+          origin_access_identity = s3_origin_config.value.origin_access_identity
+        }
+      }
+
+      dynamic "custom_origin_config" {
+        for_each = origin.value.custom_origin_config == null ? [] : [origin.value.custom_origin_config]
+
+        content {
+          http_port                = custom_origin_config.value.http_port
+          https_port               = custom_origin_config.value.https_port
+          origin_protocol_policy   = custom_origin_config.value.origin_protocol_policy
+          origin_ssl_protocols     = custom_origin_config.value.origin_ssl_protocols
+          origin_keepalive_timeout = custom_origin_config.value.origin_keepalive_timeout
+          origin_read_timeout      = custom_origin_config.value.origin_read_timeout
+        }
+      }
+
+      dynamic "custom_header" {
+        for_each = origin.value.custom_header
+
+        content {
+          name  = custom_header.value.name
+          value = custom_header.value.value
+        }
+      }
+
+      dynamic "origin_shield" {
+        for_each = origin.value.origin_shield == null ? [] : [origin.value.origin_shield]
+
+        content {
+          enabled              = origin_shield.value.enabled
+          origin_shield_region = origin_shield.value.origin_shield_region
+        }
       }
     }
+  }
 
-    s3_one = {
-      domain_name = "my-s3-bycket.s3.amazonaws.com"
-      s3_origin_config = {
-        origin_access_identity = "s3_bucket_one"
+  viewer_certificate {
+    acm_certificate_arn            = lookup(var.viewer_certificate, "acm_certificate_arn", null)
+    cloudfront_default_certificate = lookup(var.viewer_certificate, "cloudfront_default_certificate", null)
+    iam_certificate_id             = lookup(var.viewer_certificate, "iam_certificate_id", null)
+    minimum_protocol_version       = lookup(var.viewer_certificate, "minimum_protocol_version", "TLSv1")
+    ssl_support_method             = lookup(var.viewer_certificate, "ssl_support_method", null)
+  }
+
+  restrictions {
+    dynamic "geo_restriction" {
+      for_each = [var.geo_restriction]
+
+      content {
+        restriction_type = lookup(geo_restriction.value, "restriction_type", "none")
+        locations        = lookup(geo_restriction.value, "locations", [])
       }
     }
-  }
-
-  default_cache_behavior = {
-    target_origin_id           = "something"
-    viewer_protocol_policy     = "allow-all"
-
-    allowed_methods = ["GET", "HEAD", "OPTIONS"]
-    cached_methods  = ["GET", "HEAD"]
-    compress        = true
-    query_string    = true
-  }
-
-  ordered_cache_behavior = [
-    {
-      path_pattern           = "/static/*"
-      target_origin_id       = "s3_one"
-      viewer_protocol_policy = "redirect-to-https"
-
-      allowed_methods = ["GET", "HEAD", "OPTIONS"]
-      cached_methods  = ["GET", "HEAD"]
-      compress        = true
-      query_string    = true
-    }
-  ]
-
-  viewer_certificate = {
-    acm_certificate_arn = "arn:aws:acm:us-east-1:135367859851:certificate/1032b155-22da-4ae0-9f69-e206f825458b"
-    ssl_support_method  = "sni-only"
   }
 }

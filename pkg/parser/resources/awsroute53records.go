@@ -3,10 +3,10 @@ package resources
 import "github.com/hashicorp/hcl/v2"
 
 type AwsRoute53Records struct {
-	ZoneId      *string            `hcl:"zone_id"`
-	ZoneName    *string            `hcl:"zone_name"`
-	PrivateZone *bool              `hcl:"private_zone"`
-	Records     []AwsRoute53Record `hcl:"records"`
+	ZoneId      *string             `hcl:"zone_id"`
+	ZoneName    *string             `hcl:"zone_name"`
+	PrivateZone *bool               `hcl:"private_zone"`
+	Records     []*AwsRoute53Record `hcl:"records"`
 }
 
 type AwsRoute53Record struct {
@@ -90,8 +90,10 @@ func AwsRoute53RecordsFactory(body hcl.Body) (Resource, error) {
 			}
 
 			l := v.AsValueSlice()
-			out.Records = make([]AwsRoute53Record, len(l))
+			out.Records = make([]*AwsRoute53Record, len(l))
 			for i, v := range l {
+				out.Records[i] = &AwsRoute53Record{}
+
 				m := v.AsValueMap()
 				for k, v := range m {
 					switch k {

@@ -22,7 +22,7 @@ func Basic(body hcl.Body, opts Resource) (Resource, error) {
 func NewResources() Resources {
 	return map[string]Factory{
 		"aws_acm":                             func(b hcl.Body) (Resource, error) { return Basic(b, &AwsAcm{}) },
-		"aws_cloudfront_distribution":         func(b hcl.Body) (Resource, error) { return Basic(b, &AwsCloudfrontDistribution{}) },
+		"aws_cloudfront_distribution":         AwsCloudfrontDistributionFactory,
 		"aws_identitystore_assignments":       func(b hcl.Body) (Resource, error) { return Basic(b, &AwsIdentitystoreAssignments{}) },
 		"aws_identitystore_group_memberships": func(b hcl.Body) (Resource, error) { return Basic(b, &AwsIdentitystoreGroupMemberships{}) },
 		"aws_identitystore_groups":            func(b hcl.Body) (Resource, error) { return Basic(b, &AwsIdentitystoreGroups{}) },
