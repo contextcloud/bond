@@ -19,5 +19,5 @@ resource "aws_organizational_unit" "cloud_unit" {
     "name"  = "cloud-prod"
     "email" = "aws+cloud-prod@getnoops.com"
   }]
-  depends_on = ["module.bond"]
+  depends_on = ["bond"]
 }

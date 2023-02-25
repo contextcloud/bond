@@ -14,10 +14,11 @@ resource "aws_acm_certificate" "this" {
 }
 
 data "aws_route53_zone" "this" {
-  for_each     = toset(local.unique_zones)
-  
-  zone_id      = var.zone_id
-  name         = try(length(var.zone_id), 0) == 0 ? (var.zone_name == "" ? each.key : var.zone_name) : null
+  for_each = toset(local.unique_zones)
+
+  zone_id  = var.zone_id
+  name     = try(length(var.zone_id), 0) == 0 ? (var.zone_name == "" ? each.key : var.zone_name) : null
+  provider = aws.dns
 }
 
 resource "aws_route53_record" "this" {
@@ -34,6 +35,7 @@ resource "aws_route53_record" "this" {
   name            = each.value.name
   type            = each.value.type
   records         = [each.value.record]
+  provider        = aws.dns
 }
 
 resource "aws_acm_certificate_validation" "this" {

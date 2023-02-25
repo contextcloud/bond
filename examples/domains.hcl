@@ -1,12 +1,13 @@
 id = "bond-domains"
 
 provider "aws" {
-  region   = "us-east-1"
+  region = "us-east-1"
 
   assume_role {
     role_arn = "arn:aws:iam::497099817429:role/OrganizationAccountAccessRole"
   }
 }
+
 
 resource "aws_route53_zones" "zones" {
   zones = [{

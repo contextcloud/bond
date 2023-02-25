@@ -22,15 +22,31 @@ var schema = &hcl.BodySchema{
 		{
 			Name: "viewer_certificate",
 		},
+		{
+			Name: "geo_restriction",
+		},
+		{
+			Name: "tags",
+		},
+		{
+			Name: "default_cache_behavior",
+		},
+		{
+			Name: "ordered_cache_behavior",
+		},
 	},
 }
 
 type AwsCloudfrontDistribution struct {
-	Aliases           []string                                     `hcl:"aliases,optional"`
-	Comment           *string                                      `hcl:"comment,optional"`
-	PriceClass        *string                                      `hcl:"price_class,optional"`
-	Origin            []*AwsCloudfrontDistribution_Origin          `hcl:"origin"`
-	ViewerCertificate *AwsCloudfrontDistribution_ViewerCertificate `hcl:"viewer_certificate"`
+	Aliases              []string                                          `hcl:"aliases,optional"`
+	Comment              *string                                           `hcl:"comment,optional"`
+	PriceClass           *string                                           `hcl:"price_class,optional"`
+	Origin               []*AwsCloudfrontDistribution_Origin               `hcl:"origin"`
+	ViewerCertificate    *AwsCloudfrontDistribution_ViewerCertificate      `hcl:"viewer_certificate"`
+	Tags                 map[string]string                                 `hcl:"tags,optional"`
+	GeoRestriction       *AwsCloudfrontDistribution_GeoRestriction         `hcl:"geo_restriction"`
+	DefaultCacheBehavior *AwsCloudfrontDistribution_DefaultCacheBehavior   `hcl:"default_cache_behavior"`
+	OrderedCacheBehavior []*AwsCloudfrontDistribution_OrderedCacheBehavior `hcl:"ordered_cache_behavior"`
 }
 
 type AwsCloudfrontDistribution_Origin struct {
@@ -69,6 +85,65 @@ type AwsCloudfrontDistribution_ViewerCertificate struct {
 	IamCertificateId             *string `cty:"iam_certificate_id"`
 	MinimumProtocolVersion       *string `cty:"minimum_protocol_version"`
 	SslSupportMethod             *string `cty:"ssl_support_method"`
+}
+
+type AwsCloudfrontDistribution_GeoRestriction struct {
+	Locations       []string `cty:"locations"`
+	RestrictionType string   `cty:"restriction_type"`
+}
+
+type AwsCloudfrontDistribution_DefaultCacheBehavior struct {
+	AllowedMethods             []string `cty:"allowed_methods"`
+	CachedMethods              []string `cty:"cached_methods"`
+	CachePolicyId              *string  `cty:"cache_policy_id"`
+	Compress                   *bool    `cty:"compress"`
+	DefaultTtl                 *int64   `cty:"default_ttl"`
+	FieldLevelEncryptionId     *string  `cty:"field_level_encryption_id"`
+	LambdaFunctionAssociations []*AwsCloudfrontDistribution_CacheBehavior_LambdaFunctionAssociation
+	FunctionAssociations       []*AwsCloudfrontDistribution_CacheBehavior_FunctionAssociation
+	MaxTtl                     *int64   `cty:"max_ttl"`
+	MinTtl                     *int64   `cty:"min_ttl"`
+	OriginRequestPolicyId      *string  `cty:"origin_request_policy_id"`
+	RealtimeLogConfigArn       *string  `cty:"realtime_log_config_arn"`
+	ResponseHeadersPolicyId    *string  `cty:"response_headers_policy_id"`
+	SmoothStreaming            *bool    `cty:"smooth_streaming"`
+	TargetOriginId             string   `cty:"target_origin_id"`
+	TrustedKeyGroups           []string `cty:"trusted_key_groups"`
+	TrustedSigners             []string `cty:"trusted_signers"`
+	ViewerProtocolPolicy       string   `cty:"viewer_protocol_policy"`
+}
+
+type AwsCloudfrontDistribution_OrderedCacheBehavior struct {
+	AllowedMethods             []string `cty:"allowed_methods"`
+	CachedMethods              []string `cty:"cached_methods"`
+	CachePolicyId              *string  `cty:"cache_policy_id"`
+	Compress                   *bool    `cty:"compress"`
+	DefaultTtl                 *int64   `cty:"default_ttl"`
+	FieldLevelEncryptionId     *string  `cty:"field_level_encryption_id"`
+	LambdaFunctionAssociations []*AwsCloudfrontDistribution_CacheBehavior_LambdaFunctionAssociation
+	FunctionAssociations       []*AwsCloudfrontDistribution_CacheBehavior_FunctionAssociation
+	MaxTtl                     *int64   `cty:"max_ttl"`
+	MinTtl                     *int64   `cty:"min_ttl"`
+	OriginRequestPolicyId      *string  `cty:"origin_request_policy_id"`
+	PathPattern                string   `cty:"path_pattern"`
+	RealtimeLogConfigArn       *string  `cty:"realtime_log_config_arn"`
+	ResponseHeadersPolicyId    *string  `cty:"response_headers_policy_id"`
+	SmoothStreaming            *bool    `cty:"smooth_streaming"`
+	TargetOriginId             string   `cty:"target_origin_id"`
+	TrustedKeyGroups           []string `cty:"trusted_key_groups"`
+	TrustedSigners             []string `cty:"trusted_signers"`
+	ViewerProtocolPolicy       string   `cty:"viewer_protocol_policy"`
+}
+
+type AwsCloudfrontDistribution_CacheBehavior_LambdaFunctionAssociation struct {
+	EventType   string `cty:"event_type"`
+	LambdaArn   string `cty:"lambda_arn"`
+	IncludeBody *bool  `cty:"include_body"`
+}
+
+type AwsCloudfrontDistribution_CacheBehavior_FunctionAssociation struct {
+	EventType   string `cty:"event_type"`
+	FunctionArn string `cty:"function_arn"`
 }
 
 func CustomOriginConfigFactory(v cty.Value) *AwsCloudfrontDistribution_Origin_CustomOriginConfig {
@@ -120,7 +195,6 @@ func CustomHeadersFactory(v cty.Value) []*AwsCloudfrontDistribution_Origin_Custo
 	}
 	return out
 }
-
 func OriginShieldFactory(v cty.Value) *AwsCloudfrontDistribution_Origin_OriginShield {
 	m := v.AsValueMap()
 	out := &AwsCloudfrontDistribution_Origin_OriginShield{}
@@ -130,6 +204,208 @@ func OriginShieldFactory(v cty.Value) *AwsCloudfrontDistribution_Origin_OriginSh
 			out.Enabled = v.True()
 		case "origin_shield_region":
 			out.OriginShieldRegion = v.AsString()
+		}
+	}
+	return out
+}
+func DefaultCacheBehaviorFactory(v cty.Value) *AwsCloudfrontDistribution_DefaultCacheBehavior {
+	m := v.AsValueMap()
+	out := &AwsCloudfrontDistribution_DefaultCacheBehavior{}
+	for k, v := range m {
+		switch k {
+		case "allowed_methods":
+			l := v.AsValueSlice()
+			out.AllowedMethods = make([]string, len(l))
+			for i, v := range l {
+				out.AllowedMethods[i] = v.AsString()
+			}
+		case "cached_methods":
+			l := v.AsValueSlice()
+			out.CachedMethods = make([]string, len(l))
+			for i, v := range l {
+				out.CachedMethods[i] = v.AsString()
+			}
+		case "cache_policy_id":
+			str := v.AsString()
+			out.CachePolicyId = &str
+		case "compress":
+			b := v.True()
+			out.Compress = &b
+		case "default_ttl":
+			n, _ := v.AsBigFloat().Int64()
+			out.DefaultTtl = &n
+		case "field_level_encryption_id":
+			str := v.AsString()
+			out.FieldLevelEncryptionId = &str
+		case "lambda_function_associations":
+			l := v.AsValueSlice()
+			out.LambdaFunctionAssociations = make([]*AwsCloudfrontDistribution_CacheBehavior_LambdaFunctionAssociation, len(l))
+			for i, v := range l {
+				m := v.AsValueMap()
+				out.LambdaFunctionAssociations[i] = &AwsCloudfrontDistribution_CacheBehavior_LambdaFunctionAssociation{}
+				for k, v := range m {
+					switch k {
+					case "event_type":
+						out.LambdaFunctionAssociations[i].EventType = v.AsString()
+					case "lambda_arn":
+						out.LambdaFunctionAssociations[i].LambdaArn = v.AsString()
+					case "include_body":
+						b := v.True()
+						out.LambdaFunctionAssociations[i].IncludeBody = &b
+					}
+				}
+			}
+		case "function_associations":
+			l := v.AsValueSlice()
+			out.FunctionAssociations = make([]*AwsCloudfrontDistribution_CacheBehavior_FunctionAssociation, len(l))
+			for i, v := range l {
+				m := v.AsValueMap()
+				out.FunctionAssociations[i] = &AwsCloudfrontDistribution_CacheBehavior_FunctionAssociation{}
+				for k, v := range m {
+					switch k {
+					case "event_type":
+						out.FunctionAssociations[i].EventType = v.AsString()
+					case "function_arn":
+						out.FunctionAssociations[i].FunctionArn = v.AsString()
+					}
+				}
+			}
+		case "max_ttl":
+			n, _ := v.AsBigFloat().Int64()
+			out.MaxTtl = &n
+		case "min_ttl":
+			n, _ := v.AsBigFloat().Int64()
+			out.MinTtl = &n
+		case "origin_request_policy_id":
+			str := v.AsString()
+			out.OriginRequestPolicyId = &str
+		case "realtime_log_config_arn":
+			str := v.AsString()
+			out.RealtimeLogConfigArn = &str
+		case "response_headers_policy_id":
+			str := v.AsString()
+			out.ResponseHeadersPolicyId = &str
+		case "smooth_streaming":
+			b := v.True()
+			out.SmoothStreaming = &b
+		case "target_origin_id":
+			out.TargetOriginId = v.AsString()
+		case "trusted_key_groups":
+			l := v.AsValueSlice()
+			out.TrustedKeyGroups = make([]string, len(l))
+			for i, v := range l {
+				out.TrustedKeyGroups[i] = v.AsString()
+			}
+		case "trusted_signers":
+			l := v.AsValueSlice()
+			out.TrustedSigners = make([]string, len(l))
+			for i, v := range l {
+				out.TrustedSigners[i] = v.AsString()
+			}
+		case "viewer_protocol_policy":
+			out.ViewerProtocolPolicy = v.AsString()
+		}
+	}
+	return out
+}
+func OrderedCacheBehaviorFactory(v cty.Value) *AwsCloudfrontDistribution_OrderedCacheBehavior {
+	m := v.AsValueMap()
+	out := &AwsCloudfrontDistribution_OrderedCacheBehavior{}
+	for k, v := range m {
+		switch k {
+		case "allowed_methods":
+			l := v.AsValueSlice()
+			out.AllowedMethods = make([]string, len(l))
+			for i, v := range l {
+				out.AllowedMethods[i] = v.AsString()
+			}
+		case "cached_methods":
+			l := v.AsValueSlice()
+			out.CachedMethods = make([]string, len(l))
+			for i, v := range l {
+				out.CachedMethods[i] = v.AsString()
+			}
+		case "cache_policy_id":
+			str := v.AsString()
+			out.CachePolicyId = &str
+		case "compress":
+			b := v.True()
+			out.Compress = &b
+		case "default_ttl":
+			n, _ := v.AsBigFloat().Int64()
+			out.DefaultTtl = &n
+		case "field_level_encryption_id":
+			str := v.AsString()
+			out.FieldLevelEncryptionId = &str
+		case "lambda_function_associations":
+			l := v.AsValueSlice()
+			out.LambdaFunctionAssociations = make([]*AwsCloudfrontDistribution_CacheBehavior_LambdaFunctionAssociation, len(l))
+			for i, v := range l {
+				m := v.AsValueMap()
+				out.LambdaFunctionAssociations[i] = &AwsCloudfrontDistribution_CacheBehavior_LambdaFunctionAssociation{}
+				for k, v := range m {
+					switch k {
+					case "event_type":
+						out.LambdaFunctionAssociations[i].EventType = v.AsString()
+					case "lambda_arn":
+						out.LambdaFunctionAssociations[i].LambdaArn = v.AsString()
+					case "include_body":
+						b := v.True()
+						out.LambdaFunctionAssociations[i].IncludeBody = &b
+					}
+				}
+			}
+		case "function_associations":
+			l := v.AsValueSlice()
+			out.FunctionAssociations = make([]*AwsCloudfrontDistribution_CacheBehavior_FunctionAssociation, len(l))
+			for i, v := range l {
+				m := v.AsValueMap()
+				out.FunctionAssociations[i] = &AwsCloudfrontDistribution_CacheBehavior_FunctionAssociation{}
+				for k, v := range m {
+					switch k {
+					case "event_type":
+						out.FunctionAssociations[i].EventType = v.AsString()
+					case "function_arn":
+						out.FunctionAssociations[i].FunctionArn = v.AsString()
+					}
+				}
+			}
+		case "max_ttl":
+			n, _ := v.AsBigFloat().Int64()
+			out.MaxTtl = &n
+		case "min_ttl":
+			n, _ := v.AsBigFloat().Int64()
+			out.MinTtl = &n
+		case "origin_request_policy_id":
+			str := v.AsString()
+			out.OriginRequestPolicyId = &str
+		case "path_pattern":
+			out.PathPattern = v.AsString()
+		case "realtime_log_config_arn":
+			str := v.AsString()
+			out.RealtimeLogConfigArn = &str
+		case "response_headers_policy_id":
+			str := v.AsString()
+			out.ResponseHeadersPolicyId = &str
+		case "smooth_streaming":
+			b := v.True()
+			out.SmoothStreaming = &b
+		case "target_origin_id":
+			out.TargetOriginId = v.AsString()
+		case "trusted_key_groups":
+			l := v.AsValueSlice()
+			out.TrustedKeyGroups = make([]string, len(l))
+			for i, v := range l {
+				out.TrustedKeyGroups[i] = v.AsString()
+			}
+		case "trusted_signers":
+			l := v.AsValueSlice()
+			out.TrustedSigners = make([]string, len(l))
+			for i, v := range l {
+				out.TrustedSigners[i] = v.AsString()
+			}
+		case "viewer_protocol_policy":
+			out.ViewerProtocolPolicy = v.AsString()
 		}
 	}
 	return out
@@ -211,7 +487,6 @@ func AwsCloudfrontDistributionFactory(body hcl.Body) (Resource, error) {
 					}
 				}
 			}
-
 		case "viewer_certificate":
 			v, vDiags := attr.Expr.Value(nil)
 			if vDiags.HasErrors() {
@@ -238,6 +513,55 @@ func AwsCloudfrontDistributionFactory(body hcl.Body) (Resource, error) {
 					str := v.AsString()
 					out.ViewerCertificate.SslSupportMethod = &str
 				}
+			}
+		case "tags":
+			v, vDiags := attr.Expr.Value(nil)
+			if vDiags.HasErrors() {
+				diags = append(diags, vDiags...)
+				continue
+			}
+			m := v.AsValueMap()
+			out.Tags = make(map[string]string, len(m))
+			for k, v := range m {
+				out.Tags[k] = v.AsString()
+			}
+		case "geo_restriction":
+			v, vDiags := attr.Expr.Value(nil)
+			if vDiags.HasErrors() {
+				diags = append(diags, vDiags...)
+				continue
+			}
+			m := v.AsValueMap()
+			out.GeoRestriction = &AwsCloudfrontDistribution_GeoRestriction{}
+			for k, v := range m {
+				switch k {
+				case "restriction_type":
+					out.GeoRestriction.RestrictionType = v.AsString()
+				case "locations":
+					l := v.AsValueSlice()
+					out.GeoRestriction.Locations = make([]string, len(l))
+					for i, v := range l {
+						out.GeoRestriction.Locations[i] = v.AsString()
+					}
+				}
+			}
+		case "default_cache_behavior":
+			v, vDiags := attr.Expr.Value(nil)
+			if vDiags.HasErrors() {
+				diags = append(diags, vDiags...)
+				continue
+			}
+			out.DefaultCacheBehavior = DefaultCacheBehaviorFactory(v)
+		case "ordered_cache_behavior":
+			v, vDiags := attr.Expr.Value(nil)
+			if vDiags.HasErrors() {
+				diags = append(diags, vDiags...)
+				continue
+			}
+			l := v.AsValueSlice()
+			out.OrderedCacheBehavior = make([]*AwsCloudfrontDistribution_OrderedCacheBehavior, len(l))
+			for i, v := range l {
+				out.OrderedCacheBehavior[i] = OrderedCacheBehaviorFactory(v)
 			}
 		}
 	}

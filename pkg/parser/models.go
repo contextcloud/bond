@@ -9,6 +9,7 @@ type Boundry struct {
 
 type Provider struct {
 	Name    string
+	Alias   string
 	Options interface{}
 }
 
@@ -17,4 +18,5 @@ type Resource struct {
 	Name      string
 	Options   interface{}
 	DependsOn []string
+	Providers map[string]string
 }

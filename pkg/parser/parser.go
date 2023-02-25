@@ -43,13 +43,19 @@ func (p *parser) getProvider(name string, body hcl.Body) (*Provider, error) {
 		return nil, fmt.Errorf("unknown provider %q", name)
 	}
 
-	opts, err := factory(body)
+	alias, remains, err := Alias(body)
+	if err != nil {
+		return nil, err
+	}
+
+	opts, err := factory(remains)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Provider{
 		Name:    name,
+		Alias:   alias,
 		Options: opts,
 	}, nil
 }
@@ -65,7 +71,12 @@ func (p *parser) getResource(typeName string, name string, body hcl.Body) (*Reso
 		return nil, err
 	}
 
-	opts, err := factory(remains)
+	providers, next, err := Providers(remains)
+	if err != nil {
+		return nil, err
+	}
+
+	opts, err := factory(next)
 	if err != nil {
 		return nil, err
 	}
@@ -75,6 +86,7 @@ func (p *parser) getResource(typeName string, name string, body hcl.Body) (*Reso
 		Name:      name,
 		Options:   opts,
 		DependsOn: dependsOn,
+		Providers: providers,
 	}, nil
 }
 
@@ -124,7 +136,6 @@ func (p *parser) Parse(filename string, data []byte) (*Boundry, error) {
 				}
 				cfg.Env[k] = v.AsString()
 			}
-
 		case "provider":
 			name := block.Labels[0]
 

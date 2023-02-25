@@ -109,6 +109,9 @@ func (m *factory) createProviders(tmp string, boundry *parser.Boundry, backendTy
 
 	for _, m := range boundry.Providers {
 		block := gohcl.EncodeAsBlock(m.Options, "provider")
+		if len(m.Alias) > 0 {
+			block.Body().SetAttributeValue("alias", cty.StringVal(m.Alias))
+		}
 		block.SetLabels([]string{m.Name})
 		writer.Body().AppendBlock(block)
 	}
@@ -129,47 +132,18 @@ func (m *factory) createMain(tmp string, resources []*parser.Resource) error {
 	mods := map[string]bool{}
 
 	writer := hclwrite.NewEmptyFile()
-	for _, m := range resources {
-		mods[m.Type] = true
+	for _, r := range resources {
+		mods[r.Type] = true
 
 		// source
-		source := fmt.Sprintf("./modules/%s", m.Type)
+		source := fmt.Sprintf("./modules/%s", r.Type)
 
-		block := gohcl.EncodeAsBlock(m.Options, "module")
+		block := gohcl.EncodeAsBlock(r.Options, "module")
 		block.Body().SetAttributeValue("source", cty.StringVal(source))
-		block.SetLabels([]string{m.Name})
+		block.SetLabels([]string{r.Name})
 
-		if len(m.DependsOn) > 0 {
-			toks := hclwrite.Tokens{}
-			toks = append(toks, &hclwrite.Token{
-				Type:  hclsyntax.TokenOBrack,
-				Bytes: []byte("["),
-			})
-			for i, d := range m.DependsOn {
-				if i > 0 {
-					toks = append(toks, &hclwrite.Token{
-						Type:  hclsyntax.TokenComma,
-						Bytes: []byte{','},
-					})
-				}
-				toks = append(toks, &hclwrite.Token{
-					Type:  hclsyntax.TokenIdent,
-					Bytes: []byte(fmt.Sprintf("module.%s", d)),
-				})
-			}
-			toks = append(toks, &hclwrite.Token{
-				Type:  hclsyntax.TokenCBrack,
-				Bytes: []byte("]"),
-			})
-
-			// toks := hclwrite.Tokens{
-			// 	&hclwrite.Token{
-			// 		Type:  hclsyntax.TokenIdent,
-			// 		Bytes: []byte(fmt.Sprintf("module.%s", m.Name)),
-			// 	},
-			// }
-			block.Body().SetAttributeRaw("depends_on", toks)
-		}
+		writeDependsOn(block, r.DependsOn)
+		writeProviders(block, r.Providers)
 
 		writer.Body().AppendBlock(block)
 	}
