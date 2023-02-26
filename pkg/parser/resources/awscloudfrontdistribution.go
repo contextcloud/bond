@@ -61,12 +61,12 @@ type AwsCloudfrontDistribution_Origin struct {
 }
 
 type AwsCloudfrontDistribution_Origin_CustomOriginConfig struct {
-	HttpPort               *int64  `cty:"http_port"`
-	HttpsPort              *int64  `cty:"https_port"`
-	OriginProtocolPolicy   *string `cty:"origin_protocol_policy"`
-	OriginSslProtocols     []string
-	OriginReadTimeout      *int64 `cty:"origin_read_timeout"`
-	OriginKeepaliveTimeout *int64 `cty:"origin_keepalive_timeout"`
+	HttpPort               *int64   `cty:"http_port"`
+	HttpsPort              *int64   `cty:"https_port"`
+	OriginProtocolPolicy   *string  `cty:"origin_protocol_policy"`
+	OriginSslProtocols     []string `cty:"origin_ssl_protocols"`
+	OriginReadTimeout      *int64   `cty:"origin_read_timeout"`
+	OriginKeepaliveTimeout *int64   `cty:"origin_keepalive_timeout"`
 }
 
 type AwsCloudfrontDistribution_Origin_CustomHeader struct {

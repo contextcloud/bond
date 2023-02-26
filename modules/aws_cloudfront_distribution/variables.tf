@@ -116,15 +116,16 @@ variable "default_cache_behavior" {
       event_type   = string
       function_arn = string
     })))
-    max_ttl                  = optional(number)
-    min_ttl                  = optional(number)
-    origin_request_policy_id = optional(string)
-    realtime_log_config_arn  = optional(string)
-    smooth_streaming         = optional(bool)
-    target_origin_id         = string
-    trusted_key_groups       = optional(list(string))
-    trusted_signers          = optional(list(string))
-    viewer_protocol_policy   = string
+    max_ttl                    = optional(number)
+    min_ttl                    = optional(number)
+    origin_request_policy_id   = optional(string)
+    realtime_log_config_arn    = optional(string)
+    response_headers_policy_id = optional(string)
+    smooth_streaming           = optional(bool)
+    target_origin_id           = string
+    trusted_key_groups         = optional(list(string))
+    trusted_signers            = optional(list(string))
+    viewer_protocol_policy     = string
   })
 }
 
@@ -146,15 +147,16 @@ variable "ordered_cache_behavior" {
       event_type   = string
       function_arn = string
     })))
-    max_ttl                  = optional(number)
-    min_ttl                  = optional(number)
-    origin_request_policy_id = optional(string)
-    path_pattern             = string
-    realtime_log_config_arn  = optional(string)
-    smooth_streaming         = optional(bool)
-    target_origin_id         = string
-    trusted_key_groups       = optional(list(string))
-    trusted_signers          = optional(list(string))
-    viewer_protocol_policy   = string
+    max_ttl                    = optional(number)
+    min_ttl                    = optional(number)
+    origin_request_policy_id   = optional(string)
+    path_pattern               = string
+    realtime_log_config_arn    = optional(string)
+    response_headers_policy_id = optional(string)
+    smooth_streaming           = optional(bool)
+    target_origin_id           = string
+    trusted_key_groups         = optional(list(string))
+    trusted_signers            = optional(list(string))
+    viewer_protocol_policy     = string
   }))
 }
