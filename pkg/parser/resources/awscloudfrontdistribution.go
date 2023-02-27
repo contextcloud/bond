@@ -20,9 +20,6 @@ var schema = &hcl.BodySchema{
 			Name: "origin",
 		},
 		{
-			Name: "viewer_certificate",
-		},
-		{
 			Name: "geo_restriction",
 		},
 		{
@@ -42,7 +39,6 @@ type AwsCloudfrontDistribution struct {
 	Comment              *string                                           `hcl:"comment,optional"`
 	PriceClass           *string                                           `hcl:"price_class,optional"`
 	Origin               []*AwsCloudfrontDistribution_Origin               `hcl:"origin"`
-	ViewerCertificate    *AwsCloudfrontDistribution_ViewerCertificate      `hcl:"viewer_certificate"`
 	Tags                 map[string]string                                 `hcl:"tags,optional"`
 	GeoRestriction       *AwsCloudfrontDistribution_GeoRestriction         `hcl:"geo_restriction"`
 	DefaultCacheBehavior *AwsCloudfrontDistribution_DefaultCacheBehavior   `hcl:"default_cache_behavior"`
@@ -79,60 +75,61 @@ type AwsCloudfrontDistribution_Origin_OriginShield struct {
 	OriginShieldRegion string `cty:"origin_shield_region"`
 }
 
-type AwsCloudfrontDistribution_ViewerCertificate struct {
-	AcmCertificateArn            *string `cty:"acm_certificate_arn"`
-	CloudfrontDefaultCertificate *bool   `cty:"cloudfront_default_certificate"`
-	IamCertificateId             *string `cty:"iam_certificate_id"`
-	MinimumProtocolVersion       *string `cty:"minimum_protocol_version"`
-	SslSupportMethod             *string `cty:"ssl_support_method"`
-}
-
 type AwsCloudfrontDistribution_GeoRestriction struct {
 	Locations       []string `cty:"locations"`
 	RestrictionType string   `cty:"restriction_type"`
 }
 
 type AwsCloudfrontDistribution_DefaultCacheBehavior struct {
-	AllowedMethods             []string `cty:"allowed_methods"`
-	CachedMethods              []string `cty:"cached_methods"`
-	CachePolicyId              *string  `cty:"cache_policy_id"`
-	Compress                   *bool    `cty:"compress"`
-	DefaultTtl                 *int64   `cty:"default_ttl"`
-	FieldLevelEncryptionId     *string  `cty:"field_level_encryption_id"`
-	LambdaFunctionAssociations []*AwsCloudfrontDistribution_CacheBehavior_LambdaFunctionAssociation
-	FunctionAssociations       []*AwsCloudfrontDistribution_CacheBehavior_FunctionAssociation
-	MaxTtl                     *int64   `cty:"max_ttl"`
-	MinTtl                     *int64   `cty:"min_ttl"`
-	OriginRequestPolicyId      *string  `cty:"origin_request_policy_id"`
-	RealtimeLogConfigArn       *string  `cty:"realtime_log_config_arn"`
-	ResponseHeadersPolicyId    *string  `cty:"response_headers_policy_id"`
-	SmoothStreaming            *bool    `cty:"smooth_streaming"`
-	TargetOriginId             string   `cty:"target_origin_id"`
-	TrustedKeyGroups           []string `cty:"trusted_key_groups"`
-	TrustedSigners             []string `cty:"trusted_signers"`
-	ViewerProtocolPolicy       string   `cty:"viewer_protocol_policy"`
+	AllowedMethods             []string                                                             `cty:"allowed_methods"`
+	CachedMethods              []string                                                             `cty:"cached_methods"`
+	CachePolicy                *AwsCloudfrontDistribution_CacheBehavior_CachePolicy                 `cty:"cache_policy"`
+	Compress                   *bool                                                                `cty:"compress"`
+	DefaultTtl                 *int64                                                               `cty:"default_ttl"`
+	FieldLevelEncryptionId     *string                                                              `cty:"field_level_encryption_id"`
+	LambdaFunctionAssociations []*AwsCloudfrontDistribution_CacheBehavior_LambdaFunctionAssociation `cty:"lambda_function_association"`
+	FunctionAssociations       []*AwsCloudfrontDistribution_CacheBehavior_FunctionAssociation       `cty:"function_association"`
+	MaxTtl                     *int64                                                               `cty:"max_ttl"`
+	MinTtl                     *int64                                                               `cty:"min_ttl"`
+	OriginRequestPolicyId      *string                                                              `cty:"origin_request_policy_id"`
+	RealtimeLogConfigArn       *string                                                              `cty:"realtime_log_config_arn"`
+	ResponseHeadersPolicyId    *string                                                              `cty:"response_headers_policy_id"`
+	SmoothStreaming            *bool                                                                `cty:"smooth_streaming"`
+	TargetOriginId             string                                                               `cty:"target_origin_id"`
+	TrustedKeyGroups           []string                                                             `cty:"trusted_key_groups"`
+	TrustedSigners             []string                                                             `cty:"trusted_signers"`
+	ViewerProtocolPolicy       string                                                               `cty:"viewer_protocol_policy"`
 }
 
 type AwsCloudfrontDistribution_OrderedCacheBehavior struct {
-	AllowedMethods             []string `cty:"allowed_methods"`
-	CachedMethods              []string `cty:"cached_methods"`
-	CachePolicyId              *string  `cty:"cache_policy_id"`
-	Compress                   *bool    `cty:"compress"`
-	DefaultTtl                 *int64   `cty:"default_ttl"`
-	FieldLevelEncryptionId     *string  `cty:"field_level_encryption_id"`
-	LambdaFunctionAssociations []*AwsCloudfrontDistribution_CacheBehavior_LambdaFunctionAssociation
-	FunctionAssociations       []*AwsCloudfrontDistribution_CacheBehavior_FunctionAssociation
-	MaxTtl                     *int64   `cty:"max_ttl"`
-	MinTtl                     *int64   `cty:"min_ttl"`
-	OriginRequestPolicyId      *string  `cty:"origin_request_policy_id"`
-	PathPattern                string   `cty:"path_pattern"`
-	RealtimeLogConfigArn       *string  `cty:"realtime_log_config_arn"`
-	ResponseHeadersPolicyId    *string  `cty:"response_headers_policy_id"`
-	SmoothStreaming            *bool    `cty:"smooth_streaming"`
-	TargetOriginId             string   `cty:"target_origin_id"`
-	TrustedKeyGroups           []string `cty:"trusted_key_groups"`
-	TrustedSigners             []string `cty:"trusted_signers"`
-	ViewerProtocolPolicy       string   `cty:"viewer_protocol_policy"`
+	AllowedMethods             []string                                                             `cty:"allowed_methods"`
+	CachedMethods              []string                                                             `cty:"cached_methods"`
+	CachePolicy                *AwsCloudfrontDistribution_CacheBehavior_CachePolicy                 `cty:"cache_policy"`
+	Compress                   *bool                                                                `cty:"compress"`
+	DefaultTtl                 *int64                                                               `cty:"default_ttl"`
+	FieldLevelEncryptionId     *string                                                              `cty:"field_level_encryption_id"`
+	LambdaFunctionAssociations []*AwsCloudfrontDistribution_CacheBehavior_LambdaFunctionAssociation `cty:"lambda_function_association"`
+	FunctionAssociations       []*AwsCloudfrontDistribution_CacheBehavior_FunctionAssociation       `cty:"function_association"`
+	MaxTtl                     *int64                                                               `cty:"max_ttl"`
+	MinTtl                     *int64                                                               `cty:"min_ttl"`
+	OriginRequestPolicyId      *string                                                              `cty:"origin_request_policy_id"`
+	PathPattern                string                                                               `cty:"path_pattern"`
+	RealtimeLogConfigArn       *string                                                              `cty:"realtime_log_config_arn"`
+	ResponseHeadersPolicyId    *string                                                              `cty:"response_headers_policy_id"`
+	SmoothStreaming            *bool                                                                `cty:"smooth_streaming"`
+	TargetOriginId             string                                                               `cty:"target_origin_id"`
+	TrustedKeyGroups           []string                                                             `cty:"trusted_key_groups"`
+	TrustedSigners             []string                                                             `cty:"trusted_signers"`
+	ViewerProtocolPolicy       string                                                               `cty:"viewer_protocol_policy"`
+}
+
+type AwsCloudfrontDistribution_CacheBehavior_CachePolicy struct {
+	CookieBehavior      string   `cty:"cookie_behavior"`
+	CookieItems         []string `cty:"cookie_items"`
+	HeaderBehavior      string   `cty:"header_behavior"`
+	HeaderItems         []string `cty:"header_items"`
+	QueryStringBehavior string   `cty:"query_string_behavior"`
+	QueryStringItems    []string `cty:"query_string_items"`
 }
 
 type AwsCloudfrontDistribution_CacheBehavior_LambdaFunctionAssociation struct {
@@ -208,6 +205,39 @@ func OriginShieldFactory(v cty.Value) *AwsCloudfrontDistribution_Origin_OriginSh
 	}
 	return out
 }
+func CachePolicyFactory(v cty.Value) *AwsCloudfrontDistribution_CacheBehavior_CachePolicy {
+	m := v.AsValueMap()
+	out := &AwsCloudfrontDistribution_CacheBehavior_CachePolicy{}
+	for k, v := range m {
+		switch k {
+		case "cookie_behavior":
+			out.CookieBehavior = v.AsString()
+		case "cookie_items":
+			l := v.AsValueSlice()
+			out.CookieItems = make([]string, len(l))
+			for i, v := range l {
+				out.CookieItems[i] = v.AsString()
+			}
+		case "header_behavior":
+			out.HeaderBehavior = v.AsString()
+		case "header_items":
+			l := v.AsValueSlice()
+			out.HeaderItems = make([]string, len(l))
+			for i, v := range l {
+				out.HeaderItems[i] = v.AsString()
+			}
+		case "query_string_behavior":
+			out.QueryStringBehavior = v.AsString()
+		case "query_string_items":
+			l := v.AsValueSlice()
+			out.QueryStringItems = make([]string, len(l))
+			for i, v := range l {
+				out.QueryStringItems[i] = v.AsString()
+			}
+		}
+	}
+	return out
+}
 func DefaultCacheBehaviorFactory(v cty.Value) *AwsCloudfrontDistribution_DefaultCacheBehavior {
 	m := v.AsValueMap()
 	out := &AwsCloudfrontDistribution_DefaultCacheBehavior{}
@@ -225,9 +255,8 @@ func DefaultCacheBehaviorFactory(v cty.Value) *AwsCloudfrontDistribution_Default
 			for i, v := range l {
 				out.CachedMethods[i] = v.AsString()
 			}
-		case "cache_policy_id":
-			str := v.AsString()
-			out.CachePolicyId = &str
+		case "cache_policy":
+			out.CachePolicy = CachePolicyFactory(v)
 		case "compress":
 			b := v.True()
 			out.Compress = &b
@@ -325,9 +354,8 @@ func OrderedCacheBehaviorFactory(v cty.Value) *AwsCloudfrontDistribution_Ordered
 			for i, v := range l {
 				out.CachedMethods[i] = v.AsString()
 			}
-		case "cache_policy_id":
-			str := v.AsString()
-			out.CachePolicyId = &str
+		case "cache_policy":
+			out.CachePolicy = CachePolicyFactory(v)
 		case "compress":
 			b := v.True()
 			out.Compress = &b
@@ -485,33 +513,6 @@ func AwsCloudfrontDistributionFactory(body hcl.Body) (Resource, error) {
 					case "origin_shield":
 						out.Origin[i].OriginShield = OriginShieldFactory(v)
 					}
-				}
-			}
-		case "viewer_certificate":
-			v, vDiags := attr.Expr.Value(nil)
-			if vDiags.HasErrors() {
-				diags = append(diags, vDiags...)
-				continue
-			}
-
-			out.ViewerCertificate = &AwsCloudfrontDistribution_ViewerCertificate{}
-			for k, v := range v.AsValueMap() {
-				switch k {
-				case "cloudfront_default_certificate":
-					b := v.True()
-					out.ViewerCertificate.CloudfrontDefaultCertificate = &b
-				case "acm_certificate_arn":
-					str := v.AsString()
-					out.ViewerCertificate.AcmCertificateArn = &str
-				case "iam_certificate_id":
-					str := v.AsString()
-					out.ViewerCertificate.IamCertificateId = &str
-				case "minimum_protocol_version":
-					str := v.AsString()
-					out.ViewerCertificate.MinimumProtocolVersion = &str
-				case "ssl_support_method":
-					str := v.AsString()
-					out.ViewerCertificate.SslSupportMethod = &str
 				}
 			}
 		case "tags":

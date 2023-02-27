@@ -77,18 +77,6 @@ variable "origin" {
   default = null
 }
 
-variable "viewer_certificate" {
-  description = "The SSL configuration for this distribution."
-  type = object({
-    cloudfront_default_certificate = optional(bool)
-    acm_certificate_arn            = optional(string)
-    iam_certificate_id             = optional(string)
-    minimum_protocol_version       = optional(string)
-    ssl_support_method             = optional(string)
-  })
-  default = null
-}
-
 variable "geo_restriction" {
   description = "A complex type that controls the countries in which your content is distributed. CloudFront determines the location of your users using MaxMind GeoIP databases."
   type = object({
@@ -101,9 +89,16 @@ variable "geo_restriction" {
 variable "default_cache_behavior" {
   description = "A complex type that describes the default cache behavior if you don't specify a CacheBehavior element or if files don't match any of the values of PathPattern in CacheBehavior elements. You must create exactly one default cache behavior."
   type = object({
-    allowed_methods           = list(string)
-    cached_methods            = list(string)
-    cache_policy_id           = optional(string)
+    allowed_methods = list(string)
+    cached_methods  = list(string)
+    cache_policy = object({
+      cookie_behavior       = string
+      cookie_items          = optional(list(string))
+      header_behavior       = string
+      header_items          = optional(list(string))
+      query_string_behavior = string
+      query_string_items    = optional(list(string))
+    })
     compress                  = optional(bool)
     default_ttl               = optional(number)
     field_level_encryption_id = optional(string)
@@ -134,7 +129,6 @@ variable "ordered_cache_behavior" {
   type = list(object({
     allowed_methods           = list(string)
     cached_methods            = list(string)
-    cache_policy_id           = optional(string)
     compress                  = optional(bool)
     default_ttl               = optional(number)
     field_level_encryption_id = optional(string)

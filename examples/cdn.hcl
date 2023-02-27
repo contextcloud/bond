@@ -21,10 +21,6 @@ provider "aws" {
 resource "aws_acm" "cdn_certs" {
   zone_id     = "Z0135217102XSUXM7CWGH"
   domain_name = "dev01.portal.contextcloud.n-cc.net"
-  subject_alternative_names = [
-    "www.dev01.portal.contextcloud.n-cc.net",
-    "*.dev01.portal.contextcloud.n-cc.net"
-  ]
   tags = {
     "ManagedBy" = "Bond"
   }
@@ -35,47 +31,57 @@ resource "aws_acm" "cdn_certs" {
 }
 
 resource "aws_cloudfront_distribution" "distribution" {
+  aliases = ["dev01.portal.contextcloud.n-cc.net"]
   origin = [{
-    origin_id   = "www"
-    domain_name = "dev01.portal.contextcloud.n-cc.net"
+    origin_id   = "edge"
+    domain_name = "edge.nonprod.contextcloud.n-cc.net"
     custom_origin_config = {
       http_port              = 80
       https_port             = 443
       origin_protocol_policy = "match-viewer"
       origin_ssl_protocols   = ["TLSv1", "TLSv1.1", "TLSv1.2"]
     }
-    custom_header = [{
-      name  = "X-Forwarded-Scheme"
-      value = "https"
-      }, {
-      name  = "X-Frame-Options"
-      value = "SAMEORIGIN"
-    }]
     origin_shield = {
       enabled              = true
       origin_shield_region = "us-east-1"
     }
+  },{
+    origin_id   = "www"
+    s3_origin_config = {
+      origin_access_identity = "origin-access-identity/cloudfront/E1XZQXQXQXQXQ"
+    }
   }]
 
-  viewer_certificate = {
-    acm_certificate_arn = "arn:aws:acm:us-east-1:578958694144:certificate/9b91e9f3-e772-488b-bdd5-485f51faa38c"
+  default_cache_behavior = {
+    allowed_methods = ["GET", "HEAD", "OPTIONS"]
+    cached_methods  = ["GET", "HEAD"]
+    cache_policy = {
+      query_string_behavior = "all"
+      header_behavior       = "none"
+      cookie_behavior       = "all"
+    }
+    compress               = true
+    target_origin_id       = "edge"
+    viewer_protocol_policy = "allow-all"
   }
-
-  geo_restriction = {
-    restriction_type = "whitelist"
-    locations        = ["AU"]
-  }
-
+  
+  ordered_cache_behavior = [{
+    path_pattern         = "/*"
+    allowed_methods = ["GET", "HEAD", "OPTIONS"]
+    cached_methods  = ["GET", "HEAD"]
+    cache_policy = {
+      query_string_behavior = "all"
+      header_behavior       = "none"
+      cookie_behavior       = "all"
+    }
+    compress               = true
+    target_origin_id       = "www"
+    viewer_protocol_policy = "allow-all"
+  }]
   tags = {
     "ManagedBy" = "Bond"
   }
-  
-  default_cache_behavior = {
-    target_origin_id       = "www"
-    viewer_protocol_policy = "allow-all"
-    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
-    cached_methods         = ["GET", "HEAD"]
-    compress               = true
-    query_string           = true
+  providers = {
+    "aws"     = "aws.non-prod"
   }
 }

@@ -44,9 +44,11 @@ resource "aws_acm_certificate_validation" "this" {
 }
 
 locals {
+  sans = coalesce(var.subject_alternative_names, [])
+
   all_domains = concat(
     [var.domain_name],
-    var.subject_alternative_names
+    local.sans
   )
 
   domain_to_zone = {
