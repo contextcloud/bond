@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"bond/config"
+	"bond/pkg/client"
 	"bond/pkg/parser"
 
 	"github.com/spf13/cobra"
@@ -25,7 +26,7 @@ var destroyCmd = &cobra.Command{
 			return err
 		}
 
-		terraFactory, err := config.NewTerraFactory(ctx, cfg)
+		factory, err := client.NewFactory(ctx, cfg)
 		if err != nil {
 			return err
 		}
@@ -42,12 +43,12 @@ var destroyCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
-			tf, err := terraFactory.New(ctx, boundry)
+			client, err := factory.New(ctx, boundry)
 			if err != nil {
 				return err
 			}
 
-			if err := tf.Destroy(ctx); err != nil {
+			if err := client.Destroy(ctx); err != nil {
 				return err
 			}
 

@@ -2,10 +2,9 @@ package cmd
 
 import (
 	"bond/config"
+	"bond/pkg/client"
 	"bond/pkg/parser"
 	"context"
-	"encoding/json"
-	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -25,7 +24,7 @@ var applyCmd = &cobra.Command{
 			return err
 		}
 
-		terraFactory, err := config.NewTerraFactory(ctx, cfg)
+		factory, err := client.NewFactory(ctx, cfg)
 		if err != nil {
 			return err
 		}
@@ -42,26 +41,14 @@ var applyCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
-			tf, err := terraFactory.New(ctx, boundry)
+			client, err := factory.New(ctx, boundry)
 			if err != nil {
 				return err
 			}
 
-			if err := tf.Apply(ctx); err != nil {
+			if err := client.Apply(ctx); err != nil {
 				return err
 			}
-
-			output, err := tf.Output(ctx)
-			if err != nil {
-				return err
-			}
-
-			raw, err := json.Marshal(output)
-			if err != nil {
-				return err
-			}
-
-			fmt.Printf("%s", string(raw))
 		}
 
 		cancel()

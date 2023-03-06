@@ -8,8 +8,7 @@ provider "aws" {
   }
 }
 
-
-resource "aws_route53_zones" "zones" {
+resource "aws_route53_zones" "zones_root" {
   zones = [{
     name    = "contextcloud.io",
     comment = "Root zone for contextcloud.io",
@@ -17,24 +16,22 @@ resource "aws_route53_zones" "zones" {
   tags = {
     "ManagedBy" = "Bond"
   }
+  providers = {
+    "aws.ns" = "aws"
+  }
 }
 
-resource "aws_route53_records" "records" {
-  zone_name = "contextcloud.io"
-  records = [{
-    name    = "orgs.contextcloud.io",
-    type    = "NS",
-    comment = "Delegate to portal",
-    ttl     = 300,
-    records = [
-      "ns-1158.awsdns-16.org",
-      "ns-1537.awsdns-00.co.uk",
-      "ns-289.awsdns-36.com",
-      "ns-645.awsdns-16.net"
-    ]
+resource "aws_route53_zones" "zones_orgs" {
+  zones = [{
+    name         = "orgs.contextcloud.io",
+    comment      = "Root zone for contextcloud.io",
+    ns_zone_name = "contextcloud.io"
   }]
   tags = {
     "ManagedBy" = "Bond"
   }
-  depends_on = ["zones"]
+  providers = {
+    "aws.ns" = "aws"
+  }
+  depends_on = ["zones_root"]
 }

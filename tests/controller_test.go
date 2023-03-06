@@ -1,9 +1,10 @@
 package tests
 
 import (
+	"bond/config"
 	"bond/controllers"
 	"bond/examples"
-	"bond/pkg/terra"
+	"bond/pkg/client"
 	"bytes"
 	"context"
 	"net/http"
@@ -19,12 +20,10 @@ func TestDeploy(t *testing.T) {
 	}}
 
 	ctx := context.Background()
-	opts := []terra.Option{
-		// terra.WithBackendS3("contextcloud-bond-test-bucket", "us-east-1"),
-		terra.WithBaseDir("./tmp"),
+	cfg := &config.Config{
+		BaseDir: "./tmp",
 	}
-
-	factory, err := terra.NewFactory(ctx, opts...)
+	factory, err := client.NewFactory(ctx, cfg)
 	if err != nil {
 		t.Fatalf("failed to create factory: %v", err)
 		return
@@ -39,11 +38,11 @@ func TestDeploy(t *testing.T) {
 			}
 			reader := bytes.NewReader(raw)
 
-			req := httptest.NewRequest("POST", "/deploy/plan", reader)
+			req := httptest.NewRequest("POST", "/deploy/apply", reader)
 			res := httptest.NewRecorder()
 
 			c := controllers.NewDeploy(factory)
-			c.Plan(res, req)
+			c.Apply(res, req)
 
 			// Check the status code is what we expect.
 			if status := res.Code; status != http.StatusOK {

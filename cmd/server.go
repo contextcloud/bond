@@ -3,6 +3,7 @@ package cmd
 import (
 	"bond/config"
 	"bond/handler"
+	"bond/pkg/client"
 	"context"
 
 	"github.com/contextcloud/graceful"
@@ -24,12 +25,12 @@ var serverCmd = &cobra.Command{
 			return err
 		}
 
-		terraFactory, err := config.NewTerraFactory(ctx, cfg)
+		factory, err := client.NewFactory(ctx, cfg)
 		if err != nil {
 			return err
 		}
 
-		handler, err := handler.NewHandler(ctx, terraFactory)
+		handler, err := handler.NewHandler(ctx, factory)
 		if err != nil {
 			return err
 		}

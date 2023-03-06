@@ -2,7 +2,7 @@ package handler
 
 import (
 	"bond/controllers"
-	"bond/pkg/terra"
+	"bond/pkg/client"
 	"context"
 	"net/http"
 	"time"
@@ -12,9 +12,9 @@ import (
 )
 
 // NewHandler creates a new http handler
-func NewHandler(ctx context.Context, terraFactory terra.Factory) (http.Handler, error) {
+func NewHandler(ctx context.Context, clientFactory client.Factory) (http.Handler, error) {
 	// setup the deploy controller
-	d := controllers.NewDeploy(terraFactory)
+	d := controllers.NewDeploy(clientFactory)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
@@ -23,7 +23,6 @@ func NewHandler(ctx context.Context, terraFactory terra.Factory) (http.Handler, 
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))
 
-	r.Post("/deploy/plan", d.Plan)
 	r.Post("/deploy/apply", d.Apply)
 
 	return r, nil

@@ -78,6 +78,11 @@ resource "aws_cloudfront_distribution" "distribution" {
     target_origin_id       = "www"
     viewer_protocol_policy = "allow-all"
   }]
+
+  geo_restriction = {
+    restriction_type = "none"
+  }
+
   tags = {
     "ManagedBy" = "Bond"
   }

@@ -75,7 +75,7 @@ resource "aws_cloudfront_distribution" "this" {
       }
 
       dynamic "custom_header" {
-        for_each = origin.value.custom_header
+        for_each = origin.value.custom_header == null ? [] : origin.value.custom_header
 
         content {
           name  = custom_header.value.name
@@ -98,7 +98,7 @@ resource "aws_cloudfront_distribution" "this" {
     acm_certificate_arn            = local.acm_certificate_arn
     cloudfront_default_certificate = local.cloudfront_default_certificate
     ssl_support_method             = local.cloudfront_default_certificate ? null : "sni-only"
-    minminimum_protocol_version    = local.cloudfront_default_certificate ? "TLSv1" : "TLSv1.2_2019"
+    minimum_protocol_version       = local.cloudfront_default_certificate ? "TLSv1" : "TLSv1.2_2019"
   }
 
   restrictions {

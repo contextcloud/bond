@@ -1,9 +1,10 @@
 package tests
 
 import (
+	"bond/config"
 	"bond/examples"
+	"bond/pkg/client"
 	"bond/pkg/parser"
-	"bond/pkg/terra"
 	"context"
 	"testing"
 )
@@ -16,13 +17,13 @@ func TestFactoryNew(t *testing.T) {
 	}}
 
 	ctx := context.Background()
-	opts := []terra.Option{
-		// terra.WithBackendS3("contextcloud-bond-test-bucket", "us-east-1"),
-		terra.WithBaseDir("./tmp"),
+	cfg := &config.Config{
+		BaseDir: "./tmp",
+		DryRun:  true,
 	}
 
 	p := parser.NewParser()
-	f, err := terra.NewFactory(ctx, opts...)
+	f, err := client.NewFactory(ctx, cfg)
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -44,21 +45,16 @@ func TestFactoryNew(t *testing.T) {
 
 			ctx := context.Background()
 
-			tf, err := f.New(ctx, cfg)
+			c, err := f.New(ctx, cfg)
 			if err != nil {
 				t.Fatal(err)
 				return
 			}
 
-			if _, err := tf.Plan(ctx); err != nil {
+			if err := c.Apply(ctx); err != nil {
 				t.Fatal(err)
 				return
 			}
-
-			// if err := tf.Destroy(ctx); err != nil {
-			// 	t.Fatal(err)
-			// 	return
-			// }
 		})
 	}
 }

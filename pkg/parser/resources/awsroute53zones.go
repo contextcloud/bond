@@ -10,12 +10,11 @@ type AwsRoute53Zones struct {
 }
 
 type AwsRoute53Zone struct {
-	Name            string              `cty:"name"`
-	Comment         *string             `cty:"comment"`
-	ForceDestroy    *bool               `cty:"force_destroy"`
-	DelegationSetId *string             `cty:"delegation_set_id"`
-	Tags            map[string]string   `cty:"tags"`
-	Vpc             []AwsRoute53ZoneVpc `cty:"vpc"`
+	Name       string              `cty:"name"`
+	Comment    *string             `cty:"comment"`
+	NsZoneName *string             `cty:"ns_zone_name"`
+	Tags       map[string]string   `cty:"tags"`
+	Vpc        []AwsRoute53ZoneVpc `cty:"vpc"`
 }
 
 type AwsRoute53ZoneVpc struct {
@@ -63,12 +62,9 @@ func AwsRoute53ZonesFactory(body hcl.Body) (Resource, error) {
 					case "comment":
 						str := v.AsString()
 						out.Zones[i].Comment = &str
-					case "force_destroy":
-						b := v.True()
-						out.Zones[i].ForceDestroy = &b
-					case "delegation_set_id":
+					case "ns_zone_name":
 						str := v.AsString()
-						out.Zones[i].DelegationSetId = &str
+						out.Zones[i].NsZoneName = &str
 					case "tags":
 						m := v.AsValueMap()
 						out.Zones[i].Tags = make(map[string]string)

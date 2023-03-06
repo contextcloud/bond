@@ -1,23 +1,22 @@
 package controllers
 
 import (
+	"bond/pkg/client"
 	"bond/pkg/parser"
-	"bond/pkg/terra"
 	"io/ioutil"
 	"net/http"
 )
 
 type Deploy interface {
-	Plan(w http.ResponseWriter, r *http.Request)
 	Apply(w http.ResponseWriter, r *http.Request)
 }
 
 type deploy struct {
-	p            parser.Parser
-	terraFactory terra.Factory
+	p             parser.Parser
+	clientFactory client.Factory
 }
 
-func (d *deploy) Plan(w http.ResponseWriter, r *http.Request) {
+func (d *deploy) Apply(w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -37,36 +36,25 @@ func (d *deploy) Plan(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	tf, err := d.terraFactory.New(ctx, cfg)
+	client, err := d.clientFactory.New(ctx, cfg)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	result, err := tf.Plan(ctx)
-	if err != nil {
+	if err := client.Apply(ctx); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	if !result {
-		// nothing to plan
-		w.WriteHeader(http.StatusNoContent)
-		return
-	}
-
-	// todo: return plan
+	// todo: return output.
 }
 
-func (d *deploy) Apply(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func NewDeploy(terraFactory terra.Factory) Deploy {
+func NewDeploy(clientFactory client.Factory) Deploy {
 	p := parser.NewParser()
 
 	return &deploy{
-		p:            p,
-		terraFactory: terraFactory,
+		p:             p,
+		clientFactory: clientFactory,
 	}
 }

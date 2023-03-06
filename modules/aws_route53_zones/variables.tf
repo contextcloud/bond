@@ -1,10 +1,9 @@
 variable "zones" {
   type = list(object({
-    name              = string
-    comment           = string
-    force_destroy     = bool
-    delegation_set_id = optional(string)
-    tags              = optional(map(any))
+    name         = string
+    comment      = string
+    tags         = optional(map(any))
+    ns_zone_name = optional(string)
     vpc = optional(list(object({
       vpc_id     = string
       vpc_region = optional(string)
